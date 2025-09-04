@@ -1,4 +1,3 @@
- 
 import React from 'react';
 import {
   View,
@@ -11,14 +10,59 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { usePlants } from '../hooks/usePlants';
 
 const PlantCard = ({ plant, onPress }) => {
-  const daysSinceWatered = plant.lastWatered 
-    ? Math.floor((Date.now() - new Date(plant.lastWatered)) / (1000 * 60 * 60 * 24))
-    : null;
+  const getTimeDisplay = (lastCareTime) => {
+    if (!lastCareTime) return 'Never';
+    
+    const now = Date.now();
+    const careTime = new Date(lastCareTime).getTime();
+    const diffMs = now - careTime;
+    
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 1) return 'Now';
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}d`;
+    if (days < 30) return `${Math.floor(days / 7)}w`;
+    return `${Math.floor(days / 30)}mo`;
+  };
 
-  const needsWater = !daysSinceWatered || daysSinceWatered >= parseInt(plant.wateringFrequency || 7);
+  const getStatusColor = (lastCareTime, frequencyDays) => {
+    if (!lastCareTime) return '#ef4444'; // Red for never
+    
+    const daysSince = Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24));
+    const frequency = parseInt(frequencyDays || 7);
+    
+    if (daysSince >= frequency) return '#ef4444'; // Red - overdue
+    if (daysSince >= frequency * 0.8) return '#f59e0b'; // Orange - due soon
+    return '#22c55e'; // Green - all good
+  };
+
+  const getCompactStatus = (lastCareTime, type, frequency) => {
+    const timeDisplay = getTimeDisplay(lastCareTime);
+    
+    if (timeDisplay === 'Never') return 'Never';
+    
+    const daysSince = lastCareTime 
+      ? Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24))
+      : 999;
+    const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
+    
+    if (daysSince >= freq) return `Due ${timeDisplay}`;
+    return timeDisplay;
+  };
+
+  const waterColor = getStatusColor(plant.lastWatered, plant.wateringFrequency);
+  const fertColor = getStatusColor(plant.lastFertilized, plant.fertilizingFrequency);
+  const waterText = getCompactStatus(plant.lastWatered, 'water', plant.wateringFrequency);
+  const fertText = getCompactStatus(plant.lastFertilized, 'fertiliz', plant.fertilizingFrequency);
+
   const latestPhoto = plant.photos?.[plant.photos.length - 1];
 
   return (
@@ -33,20 +77,33 @@ const PlantCard = ({ plant, onPress }) => {
         )}
         
         <View style={styles.plantInfo}>
-          <Text style={styles.plantName}>{plant.name}</Text>
-          {plant.species && <Text style={styles.plantSpecies}>{plant.species}</Text>}
+          <Text style={styles.plantName} numberOfLines={1}>{plant.name}</Text>
+          {plant.species && (
+            <Text style={styles.plantSpecies} numberOfLines={1}>{plant.species}</Text>
+          )}
+          
           <View style={styles.statusContainer}>
-            <View style={[styles.statusBadge, { backgroundColor: needsWater ? '#ef4444' : '#22c55e' }]}>
-              <Text style={styles.statusText}>
-                {daysSinceWatered ? `${daysSinceWatered}d ago` : 'Never watered'}
-              </Text>
+            {/* Water status */}
+            <View style={styles.statusRow}>
+              <View style={[styles.statusDot, { backgroundColor: waterColor }]} />
+              <Text style={styles.statusLabel}>💧</Text>
+              <Text style={styles.statusTime} numberOfLines={1}>{waterText}</Text>
             </View>
-            {plant.photos?.length > 0 && (
-              <View style={styles.photoBadge}>
-                <Text style={styles.photoText}>{plant.photos.length} photos</Text>
-              </View>
-            )}
+            
+            {/* Fertilizer status */}
+            <View style={styles.statusRow}>
+              <View style={[styles.statusDot, { backgroundColor: fertColor }]} />
+              <Text style={styles.statusLabel}>🌱</Text>
+              <Text style={styles.statusTime} numberOfLines={1}>{fertText}</Text>
+            </View>
           </View>
+          
+          {/* Photos indicator */}
+          {plant.photos?.length > 0 && (
+            <View style={styles.photoIndicator}>
+              <Text style={styles.photoText}>📸 {plant.photos.length}</Text>
+            </View>
+          )}
         </View>
         
         <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
@@ -56,7 +113,14 @@ const PlantCard = ({ plant, onPress }) => {
 };
 
 export default function PlantListScreen({ navigation }) {
-  const { plants, loading } = usePlants();
+  const { plants, loading, loadPlants } = usePlants();
+
+  // Refresh data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPlants();
+    }, [loadPlants])
+  );
 
   const renderPlantCard = ({ item }) => (
     <PlantCard 
@@ -168,6 +232,7 @@ const styles = StyleSheet.create({
   plantInfo: {
     flex: 1,
     marginLeft: 12,
+    minWidth: 0, // Important for text truncation
   },
   plantName: {
     fontSize: 16,
@@ -180,28 +245,35 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusContainer: {
-    flexDirection: 'row',
     marginTop: 8,
-    gap: 8,
+    gap: 4,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  statusText: {
-    color: 'white',
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusLabel: {
     fontSize: 12,
-    fontWeight: '500',
+    width: 16, // Fixed width for emoji alignment
   },
-  photoBadge: {
-    backgroundColor: '#dbeafe',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  statusTime: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '500',
+    flex: 1, // Takes remaining space
+  },
+  photoIndicator: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
   },
   photoText: {
-    color: '#1d4ed8',
+    color: '#6b7280',
     fontSize: 12,
     fontWeight: '500',
   },

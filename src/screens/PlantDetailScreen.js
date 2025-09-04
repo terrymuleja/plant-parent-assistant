@@ -1,4 +1,3 @@
- 
 import React from 'react';
 import {
   View,
@@ -15,9 +14,51 @@ import * as ImagePicker from 'expo-image-picker';
 import { usePlants } from '../hooks/usePlants';
 
 export default function PlantDetailScreen({ route, navigation }) {
-  const { plant } = route.params;
-  const { logCare, addPhoto } = usePlants();
+  const { plant: routePlant } = route.params;
+  const { plants, logCare, addPhoto } = usePlants();
+  
+  // Get fresh plant data from the hook instead of stale route params
+  const plant = plants.find(p => p.id === routePlant.id) || routePlant;
 
+  // Use the same time calculation logic as PlantListScreen
+  const getTimeDisplay = (lastCareTime) => {
+    if (!lastCareTime) return 'Never';
+    
+    const now = Date.now();
+    const careTime = new Date(lastCareTime).getTime();
+    const diffMs = now - careTime;
+    
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minutes ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (days < 30) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(days / 30)} month${Math.floor(days / 30) > 1 ? 's' : ''} ago`;
+  };
+
+  const getStatusColor = (lastCareTime, frequencyDays) => {
+    if (!lastCareTime) return '#ef4444'; // Red for never
+    
+    const daysSince = Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24));
+    const frequency = parseInt(frequencyDays || 7);
+    
+    if (daysSince >= frequency) return '#ef4444'; // Red - overdue
+    if (daysSince >= frequency * 0.8) return '#f59e0b'; // Orange - due soon
+    return '#22c55e'; // Green - all good
+  };
+
+  // Calculate status using the same logic
+  const waterTimeDisplay = getTimeDisplay(plant.lastWatered);
+  const fertTimeDisplay = getTimeDisplay(plant.lastFertilized);
+  
+  const waterColor = getStatusColor(plant.lastWatered, plant.wateringFrequency);
+  const fertColor = getStatusColor(plant.lastFertilized, plant.fertilizingFrequency);
+
+  // Determine if care is needed
   const daysSinceWatered = plant.lastWatered 
     ? Math.floor((Date.now() - new Date(plant.lastWatered)) / (1000 * 60 * 60 * 24))
     : null;
@@ -84,91 +125,87 @@ export default function PlantDetailScreen({ route, navigation }) {
   const latestPhoto = plant.photos?.[plant.photos.length - 1];
 
   return (
-    <SafeAreaView style={detailStyles.container}>
-      <ScrollView contentContainerStyle={detailStyles.scrollContainer}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Plant Header */}
-        <View style={detailStyles.header}>
+        <View style={styles.header}>
           {latestPhoto ? (
-            <Image source={{ uri: latestPhoto.uri }} style={detailStyles.plantImage} />
+            <Image source={{ uri: latestPhoto.uri }} style={styles.plantImage} />
           ) : (
-            <View style={detailStyles.placeholderImage}>
+            <View style={styles.placeholderImage}>
               <Ionicons name="leaf" size={64} color="#22c55e" />
             </View>
           )}
-          <Text style={detailStyles.plantName}>{plant.name}</Text>
-          {plant.species && <Text style={detailStyles.plantSpecies}>{plant.species}</Text>}
+          <Text style={styles.plantName}>{plant.name}</Text>
+          {plant.species && <Text style={styles.plantSpecies}>{plant.species}</Text>}
           {plant.location && (
-            <View style={detailStyles.locationBadge}>
+            <View style={styles.locationBadge}>
               <Ionicons name="location" size={16} color="#1d4ed8" />
-              <Text style={detailStyles.locationText}>{plant.location}</Text>
+              <Text style={styles.locationText}>{plant.location}</Text>
             </View>
           )}
         </View>
 
         {/* Care Status */}
-        <View style={detailStyles.card}>
-          <Text style={detailStyles.cardTitle}>Care Status</Text>
-          <View style={detailStyles.statusRow}>
-            <View style={detailStyles.statusItem}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Care Status</Text>
+          <View style={styles.statusRow}>
+            <View style={styles.statusItem}>
               <Ionicons name="water" size={20} color="#3b82f6" />
-              <Text style={detailStyles.statusLabel}>Watering</Text>
+              <Text style={styles.statusLabel}>Watering</Text>
             </View>
-            <View style={[detailStyles.statusBadge, { backgroundColor: needsWater ? '#ef4444' : '#22c55e' }]}>
-              <Text style={detailStyles.statusBadgeText}>
-                {daysSinceWatered ? `${daysSinceWatered}d ago` : 'Never'}
-              </Text>
+            <View style={[styles.statusBadge, { backgroundColor: waterColor }]}>
+              <Text style={styles.statusBadgeText}>{waterTimeDisplay}</Text>
             </View>
           </View>
           
-          <View style={detailStyles.statusRow}>
-            <View style={detailStyles.statusItem}>
+          <View style={styles.statusRow}>
+            <View style={styles.statusItem}>
               <Ionicons name="nutrition" size={20} color="#f59e0b" />
-              <Text style={detailStyles.statusLabel}>Fertilizing</Text>
+              <Text style={styles.statusLabel}>Fertilizing</Text>
             </View>
-            <View style={[detailStyles.statusBadge, { backgroundColor: needsFertilizer ? '#ef4444' : '#22c55e' }]}>
-              <Text style={detailStyles.statusBadgeText}>
-                {daysSinceFertilized ? `${daysSinceFertilized}d ago` : 'Never'}
-              </Text>
+            <View style={[styles.statusBadge, { backgroundColor: fertColor }]}>
+              <Text style={styles.statusBadgeText}>{fertTimeDisplay}</Text>
             </View>
           </View>
         </View>
 
         {/* Quick Actions */}
-        <View style={detailStyles.card}>
-          <Text style={detailStyles.cardTitle}>Quick Actions</Text>
-          <View style={detailStyles.actionRow}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Quick Actions</Text>
+          <View style={styles.actionRow}>
             <TouchableOpacity 
-              style={[detailStyles.actionButton, { backgroundColor: needsWater ? '#3b82f6' : '#6b7280' }]}
+              style={[styles.actionButton, { backgroundColor: needsWater ? '#3b82f6' : '#6b7280' }]}
               onPress={() => handleCareAction('water')}
             >
               <Ionicons name="water" size={20} color="white" />
-              <Text style={detailStyles.actionButtonText}>Water</Text>
+              <Text style={styles.actionButtonText}>Water</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[detailStyles.actionButton, { backgroundColor: needsFertilizer ? '#f59e0b' : '#6b7280' }]}
+              style={[styles.actionButton, { backgroundColor: needsFertilizer ? '#f59e0b' : '#6b7280' }]}
               onPress={() => handleCareAction('fertilize')}
             >
               <Ionicons name="nutrition" size={20} color="white" />
-              <Text style={detailStyles.actionButtonText}>Fertilize</Text>
+              <Text style={styles.actionButtonText}>Fertilize</Text>
             </TouchableOpacity>
           </View>
           
-          <View style={detailStyles.actionRow}>
+          <View style={styles.actionRow}>
             <TouchableOpacity 
-              style={detailStyles.actionButtonOutline}
+              style={styles.actionButtonOutline}
               onPress={handleAddPhoto}
             >
               <Ionicons name="camera" size={20} color="#6b7280" />
-              <Text style={detailStyles.actionButtonOutlineText}>Add Photo</Text>
+              <Text style={styles.actionButtonOutlineText}>Add Photo</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={detailStyles.actionButtonOutline}
+              style={styles.actionButtonOutline}
               onPress={() => navigation.navigate('PhotoTimeline', { plant })}
             >
               <Ionicons name="images" size={20} color="#6b7280" />
-              <Text style={detailStyles.actionButtonOutlineText}>
+              <Text style={styles.actionButtonOutlineText}>
                 Timeline ({plant.photos?.length || 0})
               </Text>
             </TouchableOpacity>
@@ -177,19 +214,19 @@ export default function PlantDetailScreen({ route, navigation }) {
 
         {/* Plant Info */}
         {plant.notes && (
-          <View style={detailStyles.card}>
-            <Text style={detailStyles.cardTitle}>Notes</Text>
-            <Text style={detailStyles.notesText}>{plant.notes}</Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Notes</Text>
+            <Text style={styles.notesText}>{plant.notes}</Text>
           </View>
         )}
 
         {/* Care Schedule */}
-        <View style={detailStyles.card}>
-          <Text style={detailStyles.cardTitle}>Care Schedule</Text>
-          <Text style={detailStyles.scheduleText}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Care Schedule</Text>
+          <Text style={styles.scheduleText}>
             💧 Water every {plant.wateringFrequency} days
           </Text>
-          <Text style={detailStyles.scheduleText}>
+          <Text style={styles.scheduleText}>
             🌱 Fertilize every {plant.fertilizingFrequency} days
           </Text>
         </View>
@@ -198,7 +235,7 @@ export default function PlantDetailScreen({ route, navigation }) {
   );
 }
 
-const detailStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9fafb',

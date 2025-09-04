@@ -1,4 +1,3 @@
- 
 import React from 'react';
 import {
   View,
@@ -34,14 +33,14 @@ export default function PhotoTimelineScreen({ route }) {
   };
 
   const renderPhoto = ({ item, index }) => (
-    <View key={item.id} style={timelineStyles.photoCard}>
-      <Image source={{ uri: item.uri }} style={timelineStyles.photo} />
-      <View style={timelineStyles.photoInfo}>
-        <Text style={timelineStyles.photoDate}>{formatDate(item.timestamp)}</Text>
-        <Text style={timelineStyles.photoTime}>{getTimeDifference(item.timestamp)}</Text>
+    <View key={item.id} style={styles.photoCard}>
+      <Image source={{ uri: item.uri }} style={styles.photo} />
+      <View style={styles.photoInfo}>
+        <Text style={styles.photoDate}>{formatDate(item.timestamp)}</Text>
+        <Text style={styles.photoTime}>{getTimeDifference(item.timestamp)}</Text>
         {index === 0 && (
-          <View style={timelineStyles.latestBadge}>
-            <Text style={timelineStyles.latestText}>Latest</Text>
+          <View style={styles.latestBadge}>
+            <Text style={styles.latestText}>Latest</Text>
           </View>
         )}
       </View>
@@ -50,11 +49,11 @@ export default function PhotoTimelineScreen({ route }) {
 
   if (photos.length === 0) {
     return (
-      <SafeAreaView style={timelineStyles.container}>
-        <View style={timelineStyles.emptyContainer}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
           <Ionicons name="camera-outline" size={80} color="#d1d5db" />
-          <Text style={timelineStyles.emptyTitle}>No photos yet</Text>
-          <Text style={timelineStyles.emptyText}>
+          <Text style={styles.emptyTitle}>No photos yet</Text>
+          <Text style={styles.emptyText}>
             Start documenting {plant.name}'s growth by taking photos from the plant details screen
           </Text>
         </View>
@@ -63,10 +62,10 @@ export default function PhotoTimelineScreen({ route }) {
   }
 
   return (
-    <SafeAreaView style={timelineStyles.container}>
-      <View style={timelineStyles.header}>
-        <Text style={timelineStyles.headerTitle}>{plant.name} Timeline</Text>
-        <Text style={timelineStyles.headerSubtitle}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{plant.name} Timeline</Text>
+        <Text style={styles.headerSubtitle}>
           {photos.length} photos • {getTimeDifference(photos[0]?.timestamp)} to now
         </Text>
       </View>
@@ -75,14 +74,14 @@ export default function PhotoTimelineScreen({ route }) {
         data={photos.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))}
         renderItem={renderPhoto}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={timelineStyles.listContainer}
+        contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
 
-const timelineStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9fafb',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PLANTS_STORAGE_KEY = '@plants';
@@ -7,26 +7,32 @@ export const usePlants = () => {
   const [plants, setPlantsState] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadPlants();
-  }, []);
-
-  const loadPlants = async () => {
+  const loadPlants = useCallback(async () => {
+    setLoading(true);
     try {
       const storedPlants = await AsyncStorage.getItem(PLANTS_STORAGE_KEY);
       if (storedPlants) {
-        setPlantsState(JSON.parse(storedPlants));
+        const parsedPlants = JSON.parse(storedPlants);
+        setPlantsState(parsedPlants);
+      } else {
+        setPlantsState([]);
       }
     } catch (error) {
       console.error('Error loading plants:', error);
+      setPlantsState([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPlants();
+  }, [loadPlants]);
 
   const savePlants = async (newPlants) => {
     try {
       await AsyncStorage.setItem(PLANTS_STORAGE_KEY, JSON.stringify(newPlants));
+      // Update state immediately - don't wait for reload
       setPlantsState(newPlants);
     } catch (error) {
       console.error('Error saving plants:', error);
@@ -78,6 +84,8 @@ export const usePlants = () => {
   };
 
   const logCare = async (plantId, careType) => {
+    console.log(`Logging care: ${careType} for plant ${plantId}`);
+    
     const careEntry = {
       id: Date.now().toString(),
       type: careType,
@@ -86,16 +94,19 @@ export const usePlants = () => {
     
     const newPlants = plants.map(plant => {
       if (plant.id === plantId) {
-        return {
+        const updatedPlant = {
           ...plant,
           careLog: [...(plant.careLog || []), careEntry],
           lastWatered: careType === 'water' ? new Date().toISOString() : plant.lastWatered,
           lastFertilized: careType === 'fertilize' ? new Date().toISOString() : plant.lastFertilized
         };
+        console.log('Updated plant:', updatedPlant);
+        return updatedPlant;
       }
       return plant;
     });
     
+    console.log('All plants after update:', newPlants);
     await savePlants(newPlants);
   };
 
@@ -106,6 +117,7 @@ export const usePlants = () => {
     updatePlant,
     deletePlant,
     addPhoto,
-    logCare
+    logCare,
+    loadPlants
   };
 };

@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { usePlants } from '../hooks/usePlants';
 
-export default function RemindersScreen() {
+export default function RemindersScreen({ navigation }) {
   const { plants, logCare } = usePlants();
   const [reminders, setReminders] = useState([]);
 
@@ -80,24 +79,59 @@ export default function RemindersScreen() {
 
   const handleCareAction = async (reminder) => {
     Alert.alert(
-      'Mark as Complete',
-      `Mark ${reminder.plant.name} as ${reminder.type === 'water' ? 'watered' : 'fertilized'}?`,
+      `${reminder.type === 'water' ? 'Water' : 'Fertilize'} ${reminder.plant.name}?`,
+      `What would you like to do?`,
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Done', 
-          onPress: async () => {
-            try {
-              await logCare(reminder.plantId, reminder.type);
-              Alert.alert('Success', `${reminder.plant.name} has been ${reminder.type === 'water' ? 'watered' : 'fertilized'}!`);
-              generateReminders();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to log care');
-            }
+          text: 'Go to Plant', 
+          onPress: () => {
+            navigation.navigate('PlantDetail', { plant: reminder.plant });
+          },
+          style: 'default'
+        },
+        { 
+          text: 'Snooze 2hrs', 
+          onPress: () => {
+            // You could implement snooze logic here
+            Alert.alert('Snoozed', `Will remind you about ${reminder.plant.name} in 2 hours`);
+          }
+        },
+        { 
+          text: 'Already Done', 
+          onPress: () => {
+            // Second confirmation for actual completion
+            Alert.alert(
+              'Confirm Care Completed',
+              `⚠️ Only mark as done if you have ACTUALLY ${reminder.type === 'water' ? 'watered' : 'fertilized'} ${reminder.plant.name}.\n\nThis will update your care log and remove this reminder.`,
+              [
+                { text: 'No, Cancel', style: 'cancel' },
+                { 
+                  text: 'Yes, I Did It', 
+                  onPress: async () => {
+                    try {
+                      await logCare(reminder.plantId, reminder.type);
+                      Alert.alert('✅ Care Logged', `${reminder.plant.name} has been marked as ${reminder.type === 'water' ? 'watered' : 'fertilized'}!`);
+                      generateReminders();
+                    } catch (error) {
+                      Alert.alert('Error', 'Failed to log care');
+                    }
+                  },
+                  style: 'default'
+                }
+              ]
+            );
           }
         }
       ]
     );
+  };
+
+  const handlePlantPress = (plant) => {
+    navigation.navigate('Plants', { 
+      screen: 'PlantDetail', 
+      params: { plant } 
+    });
   };
 
   const getUrgencyColor = (urgency) => {
@@ -113,48 +147,59 @@ export default function RemindersScreen() {
     const latestPhoto = item.plant.photos?.[item.plant.photos.length - 1];
     
     return (
-      <View style={reminderStyles.reminderCard}>
-        <View style={reminderStyles.cardContent}>
+      <TouchableOpacity 
+        style={styles.reminderCard}
+        onPress={() => handlePlantPress(item.plant)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardContent}>
           {latestPhoto ? (
-            <Image source={{ uri: latestPhoto.uri }} style={reminderStyles.plantImage} />
+            <Image source={{ uri: latestPhoto.uri }} style={styles.plantImage} />
           ) : (
-            <View style={reminderStyles.placeholderImage}>
+            <View style={styles.placeholderImage}>
               <Ionicons name="leaf" size={24} color="#22c55e" />
             </View>
           )}
           
-          <View style={reminderStyles.reminderInfo}>
-            <View style={reminderStyles.reminderHeader}>
+          <View style={styles.reminderInfo}>
+            <View style={styles.reminderHeader}>
               <Ionicons 
                 name={item.icon} 
                 size={16} 
                 color={item.color} 
               />
-              <Text style={reminderStyles.reminderTitle}>{item.title}</Text>
+              <Text style={styles.reminderTitle}>{item.title}</Text>
             </View>
-            <Text style={reminderStyles.reminderDescription}>{item.description}</Text>
-            <View style={[reminderStyles.urgencyBadge, { backgroundColor: getUrgencyColor(item.urgency) }]}>
-              <Text style={reminderStyles.urgencyText}>{item.urgency} priority</Text>
+            <Text style={styles.reminderDescription}>{item.description}</Text>
+            <View style={styles.badgeRow}>
+              <View style={[styles.urgencyBadge, { backgroundColor: getUrgencyColor(item.urgency) }]}>
+                <Text style={styles.urgencyText}>{item.urgency} priority</Text>
+              </View>
+              <Text style={styles.tapHint}>Tap for details</Text>
             </View>
           </View>
           
           <TouchableOpacity 
-            style={[reminderStyles.actionButton, { backgroundColor: item.color }]}
-            onPress={() => handleCareAction(item)}
+            style={[styles.actionButton, { backgroundColor: item.color }]}
+            onPress={(e) => {
+              e.stopPropagation(); // Prevent card press
+              handleCareAction(item);
+            }}
           >
-            <Text style={reminderStyles.actionButtonText}>Done</Text>
+            <Ionicons name="checkmark" size={16} color="white" />
+            <Text style={styles.actionButtonText}>Done</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={reminderStyles.container}>
-      <View style={reminderStyles.header}>
-        <Text style={reminderStyles.headerTitle}>Care Reminders</Text>
-        <Text style={reminderStyles.headerSubtitle}>
-          {reminders.length} plants need attention
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Care Reminders</Text>
+        <Text style={styles.headerSubtitle}>
+          {reminders.length} plants need attention • Tap cards for details
         </Text>
       </View>
       
@@ -162,13 +207,13 @@ export default function RemindersScreen() {
         data={reminders}
         renderItem={renderReminder}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={reminderStyles.listContainer}
+        contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={reminderStyles.emptyContainer}>
+          <View style={styles.emptyContainer}>
             <Ionicons name="checkmark-circle" size={64} color="#22c55e" />
-            <Text style={reminderStyles.emptyTitle}>All caught up!</Text>
-            <Text style={reminderStyles.emptyText}>
+            <Text style={styles.emptyTitle}>All caught up!</Text>
+            <Text style={styles.emptyText}>
               Your plants are well cared for
             </Text>
           </View>
@@ -178,7 +223,7 @@ export default function RemindersScreen() {
   );
 }
 
-const reminderStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9fafb',
@@ -247,23 +292,35 @@ const reminderStyles = StyleSheet.create({
     color: '#6b7280',
     marginTop: 2,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
   urgencyBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginTop: 8,
   },
   urgencyText: {
     color: 'white',
     fontSize: 12,
     fontWeight: '500',
   },
+  tapHint: {
+    fontSize: 12,
+    color: '#9ca3af',
+    fontStyle: 'italic',
+  },
   actionButton: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     marginLeft: 12,
+    gap: 4,
   },
   actionButtonText: {
     color: 'white',

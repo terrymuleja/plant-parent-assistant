@@ -1,4 +1,3 @@
-   
 import React, { useState } from 'react';
 import {
   View,
@@ -117,6 +116,7 @@ export default function AddPlantScreen({ navigation }) {
   };
 
   const handleSubmit = async () => {
+    console.log('handleSubmit called'); // Add this line
     if (!formData.name.trim()) {
       Alert.alert("Error", "Plant name is required");
       return;
@@ -236,8 +236,7 @@ export default function AddPlantScreen({ navigation }) {
   );
 }
 
-// Add styles for AddPlantScreen
-const addPlantStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9fafb',
@@ -372,6 +371,3 @@ const addPlantStyles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-
-// Merge styles
-Object.assign(styles, addPlantStyles);
