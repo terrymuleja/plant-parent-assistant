@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import PlantListScreen from './src/screens/PlantListScreen';
+import EditPlantScreen from './src/screens/EditPlantScreen';
 import AddPlantScreen from './src/screens/AddPlantScreen';
 import PlantDetailScreen from './src/screens/PlantDetailScreen';
 import PhotoTimelineScreen from './src/screens/PhotoTimelineScreen';
@@ -30,6 +31,11 @@ function PlantStack() {
         name="PlantDetail" 
         component={PlantDetailScreen} 
         options={{ title: 'Plant Details' }}
+      />
+      <Stack.Screen 
+        name="EditPlant" 
+        component={EditPlantScreen} 
+        options={{ title: 'Edit Plant' }}
       />
       <Stack.Screen 
         name="PhotoTimeline" 

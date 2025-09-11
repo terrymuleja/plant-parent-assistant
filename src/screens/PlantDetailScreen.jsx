@@ -12,14 +12,24 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { usePlants } from '../hooks/usePlants';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function PlantDetailScreen({ route, navigation }) {
   const { plant: routePlant } = route.params;
-  const { plants, logCare, addPhoto } = usePlants();
+  const { plants, logCare, addPhoto, loadPlants } = usePlants();
   
+  useFocusEffect(
+  React.useCallback(() => {
+    loadPlants(); // This will refresh the plants data
+  }, [loadPlants])
+);
+
+
   // Get fresh plant data from the hook instead of stale route params
   const plant = plants.find(p => p.id === routePlant.id) || routePlant;
-  console.log('Rendering details for plant:', plant);
+  //console.log('Rendering details for plant:', plant);
+  console.log('Plant location from state:', plants.find(p => p.id === routePlant.id)?.location);
+  console.log('Plant location from route:', routePlant.location);
   // Use the same time calculation logic as PlantListScreen
   const getTimeDisplay = (lastCareTime) => {
     if (!lastCareTime) return 'Never';
@@ -175,7 +185,26 @@ export default function PlantDetailScreen({ route, navigation }) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Quick Actions</Text>
           <View style={styles.actionRow}>
+             <TouchableOpacity 
+              style={styles.actionButtonOutline}
+              onPress={handleAddPhoto}
+            >
+              <Ionicons name="camera" size={20} color="#6b7280" />
+              <Text style={styles.actionButtonOutlineText}>New Photo</Text>
+            </TouchableOpacity>
+            
             <TouchableOpacity 
+              style={styles.actionButtonOutline}
+              onPress={() => navigation.navigate('EditPlant', { plant })}
+            >
+              <Ionicons name="create" size={20} color="#6b7280" />
+              <Text style={styles.actionButtonOutlineText}>Edit Plant</Text>
+            </TouchableOpacity>
+            
+          </View>
+          
+          <View style={styles.actionRow}>
+           <TouchableOpacity 
               style={[styles.actionButton, { backgroundColor: needsWater ? '#3b82f6' : '#6b7280' }]}
               onPress={() => handleCareAction('water')}
             >
@@ -190,21 +219,14 @@ export default function PlantDetailScreen({ route, navigation }) {
               <Ionicons name="nutrition" size={20} color="white" />
               <Text style={styles.actionButtonText}>Fertilize</Text>
             </TouchableOpacity>
+            
+           
           </View>
-          
           <View style={styles.actionRow}>
             <TouchableOpacity 
-              style={styles.actionButtonOutline}
-              onPress={handleAddPhoto}
-            >
-              <Ionicons name="camera" size={20} color="#6b7280" />
-              <Text style={styles.actionButtonOutlineText}>New Photo</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.actionButtonOutline}
-              onPress={() => navigation.navigate('PhotoTimeline', { plant })}
-            >
+                          style={styles.actionButtonOutline}
+                          onPress={() => navigation.navigate('PhotoTimeline', { plant })}
+                        >
               <Ionicons name="images" size={20} color="#6b7280" />
               <Text style={styles.actionButtonOutlineText}>
                 Timeline ({plant.photos?.length || 0})
