@@ -19,7 +19,7 @@ export default function PlantDetailScreen({ route, navigation }) {
   
   // Get fresh plant data from the hook instead of stale route params
   const plant = plants.find(p => p.id === routePlant.id) || routePlant;
-
+  console.log('Rendering details for plant:', plant);
   // Use the same time calculation logic as PlantListScreen
   const getTimeDisplay = (lastCareTime) => {
     if (!lastCareTime) return 'Never';
@@ -89,7 +89,7 @@ export default function PlantDetailScreen({ route, navigation }) {
 
   const handleAddPhoto = () => {
     Alert.alert(
-      'Add Photo',
+      'Take New Photo',
       'Choose how to add a new photo',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -122,6 +122,7 @@ export default function PlantDetailScreen({ route, navigation }) {
     }
   };
 
+  // Get the latest photo from photos array (now consistent across all screens)
   const latestPhoto = plant.photos?.[plant.photos.length - 1];
 
   return (
@@ -197,7 +198,7 @@ export default function PlantDetailScreen({ route, navigation }) {
               onPress={handleAddPhoto}
             >
               <Ionicons name="camera" size={20} color="#6b7280" />
-              <Text style={styles.actionButtonOutlineText}>Add Photo</Text>
+              <Text style={styles.actionButtonOutlineText}>New Photo</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 

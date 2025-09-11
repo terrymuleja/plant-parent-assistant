@@ -13,7 +13,30 @@ export const usePlants = () => {
       const storedPlants = await AsyncStorage.getItem(PLANTS_STORAGE_KEY);
       if (storedPlants) {
         const parsedPlants = JSON.parse(storedPlants);
-        setPlantsState(parsedPlants);
+        
+        // Migrate existing plants with old photo structure
+        const migratedPlants = parsedPlants.map(plant => {
+          if (plant.photo && (!plant.photos || plant.photos.length === 0)) {
+            return {
+              ...plant,
+              photos: [{
+                id: Date.now().toString(),
+                uri: plant.photo,
+                timestamp: plant.createdAt || new Date().toISOString()
+              }],
+              // Remove old photo field
+              photo: undefined
+            };
+          }
+          return plant;
+        });
+        
+        // Save migrated data back to storage
+        if (JSON.stringify(migratedPlants) !== JSON.stringify(parsedPlants)) {
+          await AsyncStorage.setItem(PLANTS_STORAGE_KEY, JSON.stringify(migratedPlants));
+        }
+        
+        setPlantsState(migratedPlants);
       } else {
         setPlantsState([]);
       }
@@ -44,9 +67,17 @@ export const usePlants = () => {
       id: Date.now().toString(),
       ...plant,
       createdAt: new Date().toISOString(),
-      photos: [],
+      photos: plant.photo ? [{ 
+        id: Date.now().toString(),
+        uri: plant.photo,
+        timestamp: new Date().toISOString()
+      }] : [],
       careLog: []
     };
+    
+    // Remove the old single photo field since we're using photos array now
+    delete newPlant.photo;
+    
     const newPlants = [...plants, newPlant];
     await savePlants(newPlants);
   };
