@@ -10,7 +10,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { usePlants, deletePlant  } from '../hooks/usePlants';
+import { usePlants  } from '../hooks/usePlants';
 
 const SelectInput = ({ label, value, options, onSelect }) => {
   const [showOptions, setShowOptions] = useState(false);
@@ -50,7 +50,7 @@ const SelectInput = ({ label, value, options, onSelect }) => {
 
 export default function EditPlantScreen({ route, navigation }) {
   const { plant } = route.params;
-  const { updatePlant } = usePlants();
+  const { updatePlant, deletePlant  } = usePlants();
   console.log('EditPlantScreen loaded for plant:', plant);
   const [formData, setFormData] = useState({
     name: plant.name || '',
