@@ -1,12 +1,13 @@
 export default {
   expo: {
     name: "PlantParent",
-    slug: "PlantParent",
+    slug: "PlantParentClean",
+    sdkVersion: "54.0.0",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
-    newArchEnabled: true,
+    newArchEnabled: false,
     splash: {
       image: "./assets/splash-icon.png",
       resizeMode: "contain",
@@ -38,8 +39,9 @@ export default {
         {
           photosPermission: "The app accesses your photos to let you add plant pictures."
         }
-      ]
+      ]      
     ],
+    
     extra: {
       eas: {
         projectId: "3148cd4f-80f1-438a-9b18-51f12e383db8"
