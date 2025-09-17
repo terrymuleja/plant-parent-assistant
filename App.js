@@ -1,4 +1,5 @@
 import React from 'react';
+import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -10,6 +11,7 @@ import AddPlantScreen from './src/screens/AddPlantScreen';
 import PlantDetailScreen from './src/screens/PlantDetailScreen';
 import PhotoTimelineScreen from './src/screens/PhotoTimelineScreen';
 import RemindersScreen from './src/screens/RemindersScreen';
+import { PremiumProvider } from './src/hooks/usePremium';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -75,8 +77,10 @@ function MainTabs() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <MainTabs />
-    </NavigationContainer>
+     <PremiumProvider>
+      <NavigationContainer>
+        <MainTabs />
+      </NavigationContainer>
+    </PremiumProvider>
   );
 }
