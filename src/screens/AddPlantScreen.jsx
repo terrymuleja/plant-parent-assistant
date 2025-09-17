@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { usePlants } from '../hooks/usePlants';
+import { usePremium } from '../hooks/usePremium';
 
 const SelectInput = ({ label, value, options, onSelect }) => {
   const [showOptions, setShowOptions] = useState(false);
@@ -51,7 +52,8 @@ const SelectInput = ({ label, value, options, onSelect }) => {
 };
 
 export default function AddPlantScreen({ navigation }) {
-  const { addPlant } = usePlants();
+  const { isPremium } = usePremium();
+  const { addPlant, plants } = usePlants();
   const [formData, setFormData] = useState({
     name: '',
     species: '',
@@ -117,6 +119,18 @@ export default function AddPlantScreen({ navigation }) {
 
   const handleSubmit = async () => {
     console.log('handleSubmit called'); // Add this line
+    if (!isPremium && plants.length >= 3) {
+    Alert.alert(
+      "Plant Limit Reached", 
+      "Free version allows up to 3 plants. Upgrade to Premium for unlimited plants and photo timeline!",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Upgrade ($7)", onPress: () => {} } // TODO: Add upgrade logic
+      ]
+    );
+    return;
+  }
+
     if (!formData.name.trim()) {
       Alert.alert("Error", "Plant name is required");
       return;
@@ -266,6 +280,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: 'white',
+     color: '#111827',
   },
   textArea: {
     height: 100,
