@@ -1,0 +1,66 @@
+{
+  "addPlant": {
+    "title": "Add a new plant to your family",
+    "plantPhoto": "Plant Photo",
+    "takePhoto": "Take Photo",
+    "gallery": "Gallery",
+    "plantName": "Plant Name",
+    "plantNameRequired": "Plant Name *",
+    "plantNamePlaceholder": "e.g., My Fiddle Leaf Fig",
+    "species": "Species",
+    "speciesPlaceholder": "e.g., Ficus lyrata",
+    "location": "Location",
+    "careSchedule": "Care Schedule",
+    "wateringFrequency": "Watering Frequency",
+    "fertilizingFrequency": "Fertilizing Frequency",
+    "notes": "Notes",
+    "notesPlaceholder": "Any special care instructions or observations...",
+    "addPlantButton": "Add Plant",
+    "addingPlant": "Adding Plant...",
+    "cancel": "Cancel"
+  },
+  "locations": {
+    "living-room": "Living Room",
+    "bedroom": "Bedroom", 
+    "kitchen": "Kitchen",
+    "bathroom": "Bathroom",
+    "office": "Office",
+    "balcony": "Balcony",
+    "garden": "Garden",
+    "other": "Other",
+    "selectLocation": "Select location"
+  },
+  "watering": {
+    "daily": "Every day",
+    "every2-3days": "Every 2-3 days",
+    "weekly": "Weekly", 
+    "biweekly": "Every 2 weeks",
+    "monthly": "Monthly",
+    "selectWatering": "Select watering frequency"
+  },
+  "fertilizing": {
+    "biweekly": "Every 2 weeks",
+    "monthly": "Monthly",
+    "bimonthly": "Every 2 months", 
+    "seasonally": "Seasonally",
+    "never": "Never",
+    "selectFertilizing": "Select fertilizing frequency"
+  },
+  "alerts": {
+    "plantLimitTitle": "Plant Limit Reached",
+    "plantLimitMessage": "Free version allows up to 3 plants. Upgrade to Premium for unlimited plants and photo timeline!",
+    "upgrade": "Upgrade ($7)",
+    "error": "Error",
+    "plantNameRequired": "Plant name is required",
+    "failedToAdd": "Failed to add plant"
+  },
+  "plantDetail": {
+    "daysAgo": "{{days}} day{{s}} ago",
+    "weeksAgo": "{{weeks}} week{{s}} ago", 
+    "monthsAgo": "{{months}} month{{s}} ago",
+    "today": "today",
+    "overdue": "Red - overdue",
+    "dueSoon": "Orange - due soon", 
+    "allGood": "Green - all good"
+  }
+}

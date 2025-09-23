@@ -39,7 +39,8 @@ export default {
         {
           photosPermission: "The app accesses your photos to let you add plant pictures."
         }
-      ]
+      ],
+      [ "expo-localization"]
     ],
     extra: {
       eas: {

@@ -1,0 +1,66 @@
+{
+  "addPlant": {
+    "title": "Voeg een nieuwe plant toe aan je familie",
+    "plantPhoto": "Plantfoto",
+    "takePhoto": "Foto maken",
+    "gallery": "Galerij",
+    "plantName": "Plantnaam",
+    "plantNameRequired": "Plantnaam *",
+    "plantNamePlaceholder": "bijv., Mijn Ficus lyrata",
+    "species": "Soort",
+    "speciesPlaceholder": "bijv., Ficus lyrata",
+    "location": "Locatie",
+    "careSchedule": "Verzorgingsschema",
+    "wateringFrequency": "Water frequentie",
+    "fertilizingFrequency": "Bemesting frequentie",
+    "notes": "Notities",
+    "notesPlaceholder": "Speciale verzorgingsinstructies of opmerkingen...",
+    "addPlantButton": "Plant toevoegen",
+    "addingPlant": "Plant toevoegen...",
+    "cancel": "Annuleren"
+  },
+  "locations": {
+    "living-room": "Woonkamer",
+    "bedroom": "Slaapkamer", 
+    "kitchen": "Keuken",
+    "bathroom": "Badkamer",
+    "office": "Kantoor",
+    "balcony": "Balkon",
+    "garden": "Tuin",
+    "other": "Anders",
+    "selectLocation": "Selecteer locatie"
+  },
+  "watering": {
+    "daily": "Elke dag",
+    "every2-3days": "Elke 2-3 dagen",
+    "weekly": "Wekelijks", 
+    "biweekly": "Elke 2 weken",
+    "monthly": "Maandelijks",
+    "selectWatering": "Selecteer water frequentie"
+  },
+  "fertilizing": {
+    "biweekly": "Elke 2 weken",
+    "monthly": "Maandelijks",
+    "bimonthly": "Elke 2 maanden", 
+    "seasonally": "Seizoensgebonden",
+    "never": "Nooit",
+    "selectFertilizing": "Selecteer bemesting frequentie"
+  },
+  "alerts": {
+    "plantLimitTitle": "Plant limiet bereikt",
+    "plantLimitMessage": "Gratis versie staat tot 3 planten toe. Upgrade naar Premium voor onbeperkte planten en foto tijdlijn!",
+    "upgrade": "Upgraden (€7)",
+    "error": "Fout",
+    "plantNameRequired": "Plantnaam is vereist",
+    "failedToAdd": "Plant toevoegen mislukt"
+  },
+  "plantDetail": {
+    "daysAgo": "{{days}} dag{{s}} geleden",
+    "weeksAgo": "{{weeks}} we{{eks}}{{en}} geleden", 
+    "monthsAgo": "{{months}} maand{{s}} geleden",
+    "today": "vandaag",
+    "overdue": "Rood - achterstallig",
+    "dueSoon": "Oranje - binnenkort", 
+    "allGood": "Groen - alles goed"
+  }
+}

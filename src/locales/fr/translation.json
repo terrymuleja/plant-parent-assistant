@@ -1,0 +1,66 @@
+{
+  "addPlant": {
+    "title": "Ajouter une nouvelle plante à votre famille",
+    "plantPhoto": "Photo de la plante",
+    "takePhoto": "Prendre une photo",
+    "gallery": "Galerie",
+    "plantName": "Nom de la plante",
+    "plantNameRequired": "Nom de la plante *",
+    "plantNamePlaceholder": "ex., Mon Ficus lyrata",
+    "species": "Espèce",
+    "speciesPlaceholder": "ex., Ficus lyrata",
+    "location": "Emplacement",
+    "careSchedule": "Programme d'entretien",
+    "wateringFrequency": "Fréquence d'arrosage",
+    "fertilizingFrequency": "Fréquence de fertilisation",
+    "notes": "Notes",
+    "notesPlaceholder": "Instructions d'entretien spéciales ou observations...",
+    "addPlantButton": "Ajouter la plante",
+    "addingPlant": "Ajout de la plante...",
+    "cancel": "Annuler"
+  },
+  "locations": {
+    "living-room": "Salon",
+    "bedroom": "Chambre", 
+    "kitchen": "Cuisine",
+    "bathroom": "Salle de bain",
+    "office": "Bureau",
+    "balcony": "Balcon",
+    "garden": "Jardin",
+    "other": "Autre",
+    "selectLocation": "Sélectionner l'emplacement"
+  },
+  "watering": {
+    "daily": "Tous les jours",
+    "every2-3days": "Tous les 2-3 jours",
+    "weekly": "Hebdomadaire", 
+    "biweekly": "Toutes les 2 semaines",
+    "monthly": "Mensuel",
+    "selectWatering": "Sélectionner la fréquence d'arrosage"
+  },
+  "fertilizing": {
+    "biweekly": "Toutes les 2 semaines",
+    "monthly": "Mensuel",
+    "bimonthly": "Tous les 2 mois", 
+    "seasonally": "Saisonnier",
+    "never": "Jamais",
+    "selectFertilizing": "Sélectionner la fréquence de fertilisation"
+  },
+  "alerts": {
+    "plantLimitTitle": "Limite de plantes atteinte",
+    "plantLimitMessage": "La version gratuite permet jusqu'à 3 plantes. Passez à Premium pour des plantes illimitées et une chronologie photo !",
+    "upgrade": "Mettre à niveau (7€)",
+    "error": "Erreur",
+    "plantNameRequired": "Le nom de la plante est requis",
+    "failedToAdd": "Échec de l'ajout de la plante"
+  },
+  "plantDetail": {
+    "daysAgo": "il y a {{days}} jour{{s}}",
+    "weeksAgo": "il y a {{weeks}} semaine{{s}}", 
+    "monthsAgo": "il y a {{months}} mois",
+    "today": "aujourd'hui",
+    "overdue": "Rouge - en retard",
+    "dueSoon": "Orange - bientôt dû", 
+    "allGood": "Vert - tout va bien"
+  }
+}

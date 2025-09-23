@@ -1,0 +1,66 @@
+{
+  "addPlant": {
+    "title": "Añade una nueva planta a tu familia",
+    "plantPhoto": "Foto de la planta",
+    "takePhoto": "Tomar foto",
+    "gallery": "Galería",
+    "plantName": "Nombre de la planta",
+    "plantNameRequired": "Nombre de la planta *",
+    "plantNamePlaceholder": "ej., Mi Ficus lyrata",
+    "species": "Especie",
+    "speciesPlaceholder": "ej., Ficus lyrata",
+    "location": "Ubicación",
+    "careSchedule": "Programa de cuidado",
+    "wateringFrequency": "Frecuencia de riego",
+    "fertilizingFrequency": "Frecuencia de fertilización",
+    "notes": "Notas",
+    "notesPlaceholder": "Instrucciones especiales de cuidado u observaciones...",
+    "addPlantButton": "Añadir planta",
+    "addingPlant": "Añadiendo planta...",
+    "cancel": "Cancelar"
+  },
+  "locations": {
+    "living-room": "Sala de estar",
+    "bedroom": "Dormitorio", 
+    "kitchen": "Cocina",
+    "bathroom": "Baño",
+    "office": "Oficina",
+    "balcony": "Balcón",
+    "garden": "Jardín",
+    "other": "Otro",
+    "selectLocation": "Seleccionar ubicación"
+  },
+  "watering": {
+    "daily": "Todos los días",
+    "every2-3days": "Cada 2-3 días",
+    "weekly": "Semanal", 
+    "biweekly": "Cada 2 semanas",
+    "monthly": "Mensual",
+    "selectWatering": "Seleccionar frecuencia de riego"
+  },
+  "fertilizing": {
+    "biweekly": "Cada 2 semanas",
+    "monthly": "Mensual",
+    "bimonthly": "Cada 2 meses", 
+    "seasonally": "Por temporadas",
+    "never": "Nunca",
+    "selectFertilizing": "Seleccionar frecuencia de fertilización"
+  },
+  "alerts": {
+    "plantLimitTitle": "Límite de plantas alcanzado",
+    "plantLimitMessage": "La versión gratuita permite hasta 3 plantas. ¡Actualiza a Premium para plantas ilimitadas y línea de tiempo de fotos!",
+    "upgrade": "Actualizar ($7)",
+    "error": "Error",
+    "plantNameRequired": "El nombre de la planta es requerido",
+    "failedToAdd": "Error al añadir la planta"
+  },
+  "plantDetail": {
+    "daysAgo": "hace {{days}} día{{s}}",
+    "weeksAgo": "hace {{weeks}} semana{{s}}", 
+    "monthsAgo": "hace {{months}} mes{{es}}",
+    "today": "hoy",
+    "overdue": "Rojo - atrasado",
+    "dueSoon": "Naranja - próximo", 
+    "allGood": "Verde - todo bien"
+  }
+}
