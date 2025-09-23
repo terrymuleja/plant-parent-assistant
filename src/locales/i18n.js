@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import translation files using require (React Native compatible)
 const en = require('./en/translation.json');
@@ -15,24 +16,37 @@ const resources = {
   es: { translation: es },
 };
 
-// Get device language with fallback
-let deviceLanguage = 'en';
-try {
-  deviceLanguage = getLocales()[0]?.languageCode || 'en';
-} catch (error) {
-  console.log('Could not get device locale, using English');
-}
+// Load saved language on app start
+const initI18n = async () => {
+  let deviceLanguage = 'en';
+  
+  try {
+    // First try to get saved language
+    const savedLanguage = await AsyncStorage.getItem('app_language');
+    if (savedLanguage) {
+      deviceLanguage = savedLanguage;
+    } else {
+      // Fall back to device language
+      deviceLanguage = getLocales()[0]?.languageCode || 'en';
+    }
+  } catch (error) {
+    console.log('Could not get language settings, using English');
+  }
 
-i18n.use(initReactI18next).init({
-  resources,
-  lng: deviceLanguage,
-  fallbackLng: 'en',
-  interpolation: {
-    escapeValue: false,
-  },
-  react: {
-    useSuspense: false,
-  },
-});
+  await i18n.use(initReactI18next).init({
+    resources,
+    lng: deviceLanguage,
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    react: {
+      useSuspense: false, // Important: prevents loading issues
+    },
+  });
+};
+
+// Initialize i18n
+initI18n();
 
 export default i18n;

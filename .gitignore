@@ -174,3 +174,4 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+android/

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
@@ -13,96 +12,101 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { usePlants } from '../hooks/usePlants';
-import { usePremium } from '../hooks/usePremium';
+import { useFocusEffect } from '@react-navigation/native';
 
-const SelectInput = ({ label, value, options, onSelect }) => {
-  const [showOptions, setShowOptions] = useState(false);
+export default function PlantDetailScreen({ route, navigation }) {
+  const { plant: routePlant } = route.params;
+  const { plants, logCare, addPhoto, loadPlants } = usePlants();
+  
+  useFocusEffect(
+  React.useCallback(() => {
+    loadPlants(); // This will refresh the plants data
+  }, [loadPlants])
+);
 
-  return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity 
-        style={styles.selectInput} 
-        onPress={() => setShowOptions(!showOptions)}
-      >
-        <Text style={[styles.inputText, !value && styles.placeholder]}>
-          {value ? options.find(opt => opt.value === value)?.label : `Select ${label.toLowerCase()}`}
-        </Text>
-        <Ionicons name="chevron-down" size={20} color="#9ca3af" />
-      </TouchableOpacity>
-      
-      {showOptions && (
-        <View style={styles.optionsContainer}>
-          {options.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={styles.option}
-              onPress={() => {
-                onSelect(option.value);
-                setShowOptions(false);
-              }}
-            >
-              <Text style={styles.optionText}>{option.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-};
 
-export default function AddPlantScreen({ navigation }) {
-  const { isPremium } = usePremium();
-  const { addPlant, plants } = usePlants();
-  const [formData, setFormData] = useState({
-    name: '',
-    species: '',
-    location: '',
-    notes: '',
-    wateringFrequency: '7',
-    fertilizingFrequency: '30',
-    photo: null
-  });
-  const [loading, setLoading] = useState(false);
+  // Get fresh plant data from the hook instead of stale route params
+  const plant = plants.find(p => p.id === routePlant.id) || routePlant;
+  //console.log('Rendering details for plant:', plant);
+  console.log('Plant location from state:', plants.find(p => p.id === routePlant.id)?.location);
+  console.log('Plant location from route:', routePlant.location);
+  // Use the same time calculation logic as PlantListScreen
+  const getTimeDisplay = (lastCareTime) => {
+    if (!lastCareTime) return 'Never';
+    
+    const now = Date.now();
+    const careTime = new Date(lastCareTime).getTime();
+    const diffMs = now - careTime;
+    
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minutes ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (days < 30) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(days / 30)} month${Math.floor(days / 30) > 1 ? 's' : ''} ago`;
+  };
 
-  const locationOptions = [
-    { label: 'Living Room', value: 'living-room' },
-    { label: 'Bedroom', value: 'bedroom' },
-    { label: 'Kitchen', value: 'kitchen' },
-    { label: 'Bathroom', value: 'bathroom' },
-    { label: 'Office', value: 'office' },
-    { label: 'Balcony', value: 'balcony' },
-    { label: 'Garden', value: 'garden' },
-    { label: 'Other', value: 'other' },
-  ];
+  const getStatusColor = (lastCareTime, frequencyDays) => {
+    if (!lastCareTime) return '#ef4444'; // Red for never
+    
+    const daysSince = Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24));
+    const frequency = parseInt(frequencyDays || 7);
+    
+    if (daysSince >= frequency) return '#ef4444'; // Red - overdue
+    if (daysSince >= frequency * 0.8) return '#f59e0b'; // Orange - due soon
+    return '#22c55e'; // Green - all good
+  };
 
-  const wateringOptions = [
-    { label: 'Every day', value: '1' },
-    { label: 'Every 2-3 days', value: '3' },
-    { label: 'Weekly', value: '7' },
-    { label: 'Every 2 weeks', value: '14' },
-    { label: 'Monthly', value: '30' },
-  ];
+  // Calculate status using the same logic
+  const waterTimeDisplay = getTimeDisplay(plant.lastWatered);
+  const fertTimeDisplay = getTimeDisplay(plant.lastFertilized);
+  
+  const waterColor = getStatusColor(plant.lastWatered, plant.wateringFrequency);
+  const fertColor = getStatusColor(plant.lastFertilized, plant.fertilizingFrequency);
 
-  const fertilizingOptions = [
-    { label: 'Every 2 weeks', value: '14' },
-    { label: 'Monthly', value: '30' },
-    { label: 'Every 2 months', value: '60' },
-    { label: 'Seasonally', value: '90' },
-    { label: 'Never', value: '365' },
-  ];
+  // Determine if care is needed
+  const daysSinceWatered = plant.lastWatered 
+    ? Math.floor((Date.now() - new Date(plant.lastWatered)) / (1000 * 60 * 60 * 24))
+    : null;
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+  const daysSinceFertilized = plant.lastFertilized 
+    ? Math.floor((Date.now() - new Date(plant.lastFertilized)) / (1000 * 60 * 60 * 24))
+    : null;
 
-    if (!result.canceled) {
-      setFormData({ ...formData, photo: result.assets[0].uri });
-    }
+  const needsWater = !daysSinceWatered || daysSinceWatered >= parseInt(plant.wateringFrequency);
+  const needsFertilizer = !daysSinceFertilized || daysSinceFertilized >= parseInt(plant.fertilizingFrequency);
+
+  const handleCareAction = async (careType) => {
+    Alert.alert(
+      'Mark as ' + (careType === 'water' ? 'watered' : 'fertilized') + '?',
+      'This will update your care log.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Confirm', 
+          onPress: async () => {
+            await logCare(plant.id, careType);
+            Alert.alert('Success', `${plant.name} has been ${careType === 'water' ? 'watered' : 'fertilized'}!`);
+          }
+        }
+      ]
+    );
+  };
+
+  const handleAddPhoto = () => {
+    Alert.alert(
+      'Take New Photo',
+      'Choose how to add a new photo',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Camera', onPress: takePicture },
+        { text: 'Gallery', onPress: pickImage }
+      ]
+    );
   };
 
   const takePicture = async () => {
@@ -111,143 +115,143 @@ export default function AddPlantScreen({ navigation }) {
       aspect: [1, 1],
       quality: 0.8,
     });
-
     if (!result.canceled) {
-      setFormData({ ...formData, photo: result.assets[0].uri });
+      await addPhoto(plant.id, result.assets[0].uri);
     }
   };
 
-  const handleSubmit = async () => {
-    console.log('handleSubmit called');
-    
-    if (!isPremium && plants.length >= 3) {
-      Alert.alert(
-        "Plant Limit Reached", 
-        "Free version allows up to 3 plants. Upgrade to Premium for unlimited plants and photo timeline!",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Upgrade ($7)", onPress: () => {} } // TODO: Add upgrade logic
-        ]
-      );
-      return;
-    }
-
-    if (!formData.name.trim()) {
-      Alert.alert("Error", "Plant name is required");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await addPlant(formData);
-      navigation.goBack();
-    } catch (error) {
-      Alert.alert("Error", "Failed to add plant");
-    } finally {
-      setLoading(false);
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      await addPhoto(plant.id, result.assets[0].uri);
     }
   };
+
+  // Get the latest photo from photos array (now consistent across all screens)
+  const latestPhoto = plant.photos?.[plant.photos.length - 1];
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>Add a new plant to your family</Text>
-
-        {/* Photo Section */}
-        <View style={styles.photoSection}>
-          <Text style={styles.label}>Plant Photo</Text>
-          {formData.photo && (
-            <Image source={{ uri: formData.photo }} style={styles.photoPreview} />
+        {/* Plant Header */}
+        <View style={styles.header}>
+          {latestPhoto ? (
+            <Image source={{ uri: latestPhoto.uri }} style={styles.plantImage} />
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Ionicons name="leaf" size={64} color="#22c55e" />
+            </View>
           )}
-          <View style={styles.photoButtons}>
-            <TouchableOpacity style={styles.photoButton} onPress={takePicture}>
+          <Text style={styles.plantName}>{plant.name}</Text>
+          {plant.species && <Text style={styles.plantSpecies}>{plant.species}</Text>}
+          {plant.location && (
+            <View style={styles.locationBadge}>
+              <Ionicons name="location" size={16} color="#1d4ed8" />
+              <Text style={styles.locationText}>{plant.location}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Care Status */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Care Status</Text>
+          <View style={styles.statusRow}>
+            <View style={styles.statusItem}>
+              <Ionicons name="water" size={20} color="#3b82f6" />
+              <Text style={styles.statusLabel}>Watering</Text>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: waterColor }]}>
+              <Text style={styles.statusBadgeText}>{waterTimeDisplay}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.statusRow}>
+            <View style={styles.statusItem}>
+              <Ionicons name="nutrition" size={20} color="#f59e0b" />
+              <Text style={styles.statusLabel}>Fertilizing</Text>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: fertColor }]}>
+              <Text style={styles.statusBadgeText}>{fertTimeDisplay}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Quick Actions</Text>
+          <View style={styles.actionRow}>
+             <TouchableOpacity 
+              style={styles.actionButtonOutline}
+              onPress={handleAddPhoto}
+            >
               <Ionicons name="camera" size={20} color="#6b7280" />
-              <Text style={styles.photoButtonText}>Take Photo</Text>
+              <Text style={styles.actionButtonOutlineText}>New Photo</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
+            
+            <TouchableOpacity 
+              style={styles.actionButtonOutline}
+              onPress={() => navigation.navigate('EditPlant', { plant })}
+            >
+              <Ionicons name="create" size={20} color="#6b7280" />
+              <Text style={styles.actionButtonOutlineText}>Edit Plant</Text>
+            </TouchableOpacity>
+            
+          </View>
+          
+          <View style={styles.actionRow}>
+           <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: needsWater ? '#3b82f6' : '#6b7280' }]}
+              onPress={() => handleCareAction('water')}
+            >
+              <Ionicons name="water" size={20} color="white" />
+              <Text style={styles.actionButtonText}>Water</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: needsFertilizer ? '#f59e0b' : '#6b7280' }]}
+              onPress={() => handleCareAction('fertilize')}
+            >
+              <Ionicons name="nutrition" size={20} color="white" />
+              <Text style={styles.actionButtonText}>Fertilize</Text>
+            </TouchableOpacity>
+            
+           
+          </View>
+          <View style={styles.actionRow}>
+            <TouchableOpacity 
+                          style={styles.actionButtonOutline}
+                          onPress={() => navigation.navigate('PhotoTimeline', { plant })}
+                        >
               <Ionicons name="images" size={20} color="#6b7280" />
-              <Text style={styles.photoButtonText}>Gallery</Text>
+              <Text style={styles.actionButtonOutlineText}>
+                Timeline ({plant.photos?.length || 0})
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Basic Info */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Plant Name *</Text>
-          <TextInput
-            style={styles.textInput}
-            value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
-            placeholder="e.g., My Fiddle Leaf Fig"
-            placeholderTextColor="#9ca3af"
-          />
-        </View>
+        {/* Plant Info */}
+        {plant.notes && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Notes</Text>
+            <Text style={styles.notesText}>{plant.notes}</Text>
+          </View>
+        )}
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Species</Text>
-          <TextInput
-            style={styles.textInput}
-            value={formData.species}
-            onChangeText={(text) => setFormData({ ...formData, species: text })}
-            placeholder="e.g., Ficus lyrata"
-            placeholderTextColor="#9ca3af"
-          />
-        </View>
-
-        <SelectInput
-          label="Location"
-          value={formData.location}
-          options={locationOptions}
-          onSelect={(value) => setFormData({ ...formData, location: value })}
-        />
-
-        <Text style={styles.sectionTitle}>Care Schedule</Text>
-        
-        <SelectInput
-          label="Watering Frequency"
-          value={formData.wateringFrequency}
-          options={wateringOptions}
-          onSelect={(value) => setFormData({ ...formData, wateringFrequency: value })}
-        />
-
-        <SelectInput
-          label="Fertilizing Frequency"
-          value={formData.fertilizingFrequency}
-          options={fertilizingOptions}
-          onSelect={(value) => setFormData({ ...formData, fertilizingFrequency: value })}
-        />
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Notes</Text>
-          <TextInput
-            style={[styles.textInput, styles.textArea]}
-            value={formData.notes}
-            onChangeText={(text) => setFormData({ ...formData, notes: text })}
-            placeholder="Any special care instructions or observations..."
-            placeholderTextColor="#9ca3af"
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={styles.submitButton} 
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            <Text style={styles.submitButtonText}>
-              {loading ? 'Adding Plant...' : 'Add Plant'}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.cancelButton} 
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
+        {/* Care Schedule */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Care Schedule</Text>
+          <Text style={styles.scheduleText}>
+            💧 Water every {plant.wateringFrequency} days
+          </Text>
+          <Text style={styles.scheduleText}>
+            🌱 Fertilize every {plant.fertilizingFrequency} days
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -262,131 +266,137 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 16,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+  header: {
+    alignItems: 'center',
     marginBottom: 24,
   },
-  inputGroup: {
+  plantImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 16,
     marginBottom: 16,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+  placeholderImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 16,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  plantName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  plantSpecies: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
     marginBottom: 8,
   },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+  locationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  locationText: {
+    color: '#1d4ed8',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  card: {
     backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#111827',
+    marginBottom: 12,
   },
-  textArea: {
-    height: 100,
-  },
-  selectInput: {
+  statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: 'white',
+    marginBottom: 8,
   },
-  inputText: {
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusLabel: {
     fontSize: 16,
-    color: '#111827',
+    color: '#374151',
   },
-  placeholder: {
-    color: '#9ca3af',
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  optionsContainer: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-    marginTop: -8,
+  statusBadgeText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
   },
-  option: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#111827',
-  },
-  photoSection: {
-    marginBottom: 16,
-  },
-  photoPreview: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    marginBottom: 12,
-    alignSelf: 'center',
-  },
-  photoButtons: {
+  actionRow: {
     flexDirection: 'row',
     gap: 12,
+    marginBottom: 12,
   },
-  photoButton: {
+  actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
+    paddingVertical: 12,
     borderRadius: 8,
-    padding: 12,
-    backgroundColor: 'white',
     gap: 8,
   },
-  photoButtonText: {
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  buttonContainer: {
-    gap: 12,
-    marginTop: 24,
-  },
-  submitButton: {
-    backgroundColor: '#22c55e',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  submitButtonText: {
+  actionButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  cancelButton: {
+  actionButtonOutline: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    backgroundColor: 'white',
+    gap: 8,
   },
-  cancelButtonText: {
+  actionButtonOutlineText: {
     color: '#6b7280',
     fontSize: 16,
     fontWeight: '500',
+  },
+  notesText: {
+    fontSize: 16,
+    color: '#374151',
+    lineHeight: 24,
+  },
+  scheduleText: {
+    fontSize: 16,
+    color: '#374151',
+    marginBottom: 4,
   },
 });

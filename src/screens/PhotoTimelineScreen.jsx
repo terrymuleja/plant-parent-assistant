@@ -9,11 +9,16 @@ import {
   FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import i18n from '../locales/i18n';
 
 export default function PhotoTimelineScreen({ route }) {
+  const { t } = useTranslation();
   const { plant } = route.params;
   const photos = plant.photos || [];
 
+  console.log('Current language:', i18n.language);
+  
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', { 
@@ -25,11 +30,11 @@ export default function PhotoTimelineScreen({ route }) {
 
   const getTimeDifference = (timestamp) => {
     const days = Math.floor((Date.now() - new Date(timestamp)) / (1000 * 60 * 60 * 24));
-    if (days === 0) return 'Today';
-    if (days === 1) return '1 day ago';
-    if (days < 30) return `${days} days ago`;
+    if (days === 0) return t('photoTimeline.today');
+    if (days === 1) return t('photoTimeline.oneDayAgo');
+    if (days < 30) return t('photoTimeline.daysAgo', { days });
     const months = Math.floor(days / 30);
-    return months === 1 ? '1 month ago' : `${months} months ago`;
+    return months === 1 ? t('photoTimeline.oneMonthAgo') : t('photoTimeline.monthsAgo', { months });
   };
 
   const renderPhoto = ({ item, index }) => (
@@ -40,7 +45,7 @@ export default function PhotoTimelineScreen({ route }) {
         <Text style={styles.photoTime}>{getTimeDifference(item.timestamp)}</Text>
         {index === 0 && (
           <View style={styles.latestBadge}>
-            <Text style={styles.latestText}>Latest</Text>
+            <Text style={styles.latestText}>{t('photoTimeline.latest')}</Text>
           </View>
         )}
       </View>
@@ -52,9 +57,9 @@ export default function PhotoTimelineScreen({ route }) {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
           <Ionicons name="camera-outline" size={80} color="#d1d5db" />
-          <Text style={styles.emptyTitle}>No photos yet</Text>
+          <Text style={styles.emptyTitle}>{t('photoTimeline.noPhotos')}</Text>
           <Text style={styles.emptyText}>
-            Start documenting {plant.name}'s growth by taking photos from the plant details screen
+            {t('photoTimeline.startDocumenting', { plantName: plant.name })}
           </Text>
         </View>
       </SafeAreaView>
@@ -64,9 +69,9 @@ export default function PhotoTimelineScreen({ route }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{plant.name} Timeline</Text>
+        <Text style={styles.headerTitle}>{t('photoTimeline.timelineTitle', { plantName: plant.name })}</Text>
         <Text style={styles.headerSubtitle}>
-          {photos.length} photos • {getTimeDifference(photos[0]?.timestamp)} to now
+          {t('photoTimeline.photoCount', { count: photos.length, timespan: getTimeDifference(photos[0]?.timestamp) })}
         </Text>
       </View>
 
