@@ -10,6 +10,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { usePlants  } from '../hooks/usePlants';
 
 const SelectInput = ({ label, value, options, onSelect }) => {
@@ -49,9 +50,10 @@ const SelectInput = ({ label, value, options, onSelect }) => {
 };
 
 export default function EditPlantScreen({ route, navigation }) {
+  const { t } = useTranslation();
   const { plant } = route.params;
   const { updatePlant, deletePlant  } = usePlants();
-  console.log('EditPlantScreen loaded for plant:', plant);
+  
   const [formData, setFormData] = useState({
     name: plant.name || '',
     species: plant.species || '',
@@ -63,35 +65,35 @@ export default function EditPlantScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
 
   const locationOptions = [
-    { label: 'Living Room', value: 'living-room' },
-    { label: 'Bedroom', value: 'bedroom' },
-    { label: 'Kitchen', value: 'kitchen' },
-    { label: 'Bathroom', value: 'bathroom' },
-    { label: 'Office', value: 'office' },
-    { label: 'Balcony', value: 'balcony' },
-    { label: 'Garden', value: 'garden' },
-    { label: 'Other', value: 'other' },
+    { label: t('locations.living-room'), value: 'living-room' },
+    { label: t('locations.bedroom'), value: 'bedroom' },
+    { label: t('locations.kitchen'), value: 'kitchen' },
+    { label: t('locations.bathroom'), value: 'bathroom' },
+    { label: t('locations.office'), value: 'office' },
+    { label: t('locations.balcony'), value: 'balcony' },
+    { label: t('locations.garden'), value: 'garden' },
+    { label: t('locations.other'), value: 'other' },
   ];
 
   const wateringOptions = [
-    { label: 'Every day', value: '1' },
-    { label: 'Every 2-3 days', value: '3' },
-    { label: 'Weekly', value: '7' },
-    { label: 'Every 2 weeks', value: '14' },
-    { label: 'Monthly', value: '30' },
+    { label: t('watering.daily'), value: '1' },
+    { label: t('watering.every2-3days'), value: '3' },
+    { label: t('watering.weekly'), value: '7' },
+    { label: t('watering.biweekly'), value: '14' },
+    { label: t('watering.monthly'), value: '30' },
   ];
 
   const fertilizingOptions = [
-    { label: 'Every 2 weeks', value: '14' },
-    { label: 'Monthly', value: '30' },
-    { label: 'Every 2 months', value: '60' },
-    { label: 'Seasonally', value: '90' },
-    { label: 'Never', value: '365' },
+    { label: t('fertilizing.biweekly'), value: '14' },
+    { label: t('fertilizing.monthly'), value: '30' },
+    { label: t('fertilizing.bimonthly'), value: '60' },
+    { label: t('fertilizing.seasonally'), value: '90' },
+    { label: t('fertilizing.never'), value: '365' },
   ];
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      Alert.alert("Error", "Plant name is required");
+      Alert.alert(t('alerts.error'), t('alerts.plantNameRequired'));
       return;
     }
 
@@ -99,12 +101,12 @@ export default function EditPlantScreen({ route, navigation }) {
     try {
       await updatePlant(plant.id, formData);
       Alert.alert(
-        "Success", 
-        "Plant updated successfully!",
-        [{ text: "OK", onPress: () => navigation.goBack() }]
+        t('editPlant.successTitle'), 
+        t('editPlant.successMessage'),
+        [{ text: t('common.ok'), onPress: () => navigation.goBack() }]
       );
     } catch (error) {
-      Alert.alert("Error", "Failed to update plant");
+      Alert.alert(t('alerts.error'), t('alerts.failedToUpdate'));
     } finally {
       setLoading(false);
     }
@@ -112,19 +114,19 @@ export default function EditPlantScreen({ route, navigation }) {
 
   const handleDelete = () => {
     Alert.alert(
-      "Delete Plant",
-      `Are you sure you want to delete ${plant.name}? This action cannot be undone.`,
+      t('editPlant.deleteConfirmTitle'),
+      t('editPlant.deleteConfirmMessage', { plantName: plant.name }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t('common.cancel'), style: "cancel" },
         { 
-          text: "Delete", 
+          text: t('editPlant.delete'), 
           style: "destructive",
           onPress: async () => {
             try {
               await deletePlant(plant.id);
               navigation.navigate('PlantList');
             } catch (error) {
-              Alert.alert("Error", "Failed to delete plant");
+              Alert.alert(t('alerts.error'), t('alerts.failedToDelete'));
             }
           }
         }
@@ -135,59 +137,58 @@ export default function EditPlantScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>Edit {plant.name}</Text>
+        <Text style={styles.title}>{t('editPlant.title', { plantName: plant.name })}</Text>
 
-        {/* Basic Info */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Plant Name *</Text>
+          <Text style={styles.label}>{t('addPlant.plantNameRequired')}</Text>
           <TextInput
             style={styles.textInput}
             value={formData.name}
             onChangeText={(text) => setFormData({ ...formData, name: text })}
-            placeholder="e.g., My Fiddle Leaf Fig"
+            placeholder={t('addPlant.plantNamePlaceholder')}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Species</Text>
+          <Text style={styles.label}>{t('addPlant.species')}</Text>
           <TextInput
             style={styles.textInput}
             value={formData.species}
             onChangeText={(text) => setFormData({ ...formData, species: text })}
-            placeholder="e.g., Ficus lyrata"
+            placeholder={t('addPlant.speciesPlaceholder')}
           />
         </View>
 
         <SelectInput
-          label="Location"
+          label={t('addPlant.location')}
           value={formData.location}
           options={locationOptions}
           onSelect={(value) => setFormData({ ...formData, location: value })}
         />
 
-        <Text style={styles.sectionTitle}>Care Schedule</Text>
+        <Text style={styles.sectionTitle}>{t('addPlant.careSchedule')}</Text>
         
         <SelectInput
-          label="Watering Frequency"
+          label={t('addPlant.wateringFrequency')}
           value={formData.wateringFrequency}
           options={wateringOptions}
           onSelect={(value) => setFormData({ ...formData, wateringFrequency: value })}
         />
 
         <SelectInput
-          label="Fertilizing Frequency"
+          label={t('addPlant.fertilizingFrequency')}
           value={formData.fertilizingFrequency}
           options={fertilizingOptions}
           onSelect={(value) => setFormData({ ...formData, fertilizingFrequency: value })}
         />
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Notes</Text>
+          <Text style={styles.label}>{t('addPlant.notes')}</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
             value={formData.notes}
             onChangeText={(text) => setFormData({ ...formData, notes: text })}
-            placeholder="Any special care instructions or observations..."
+            placeholder={t('addPlant.notesPlaceholder')}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -201,7 +202,7 @@ export default function EditPlantScreen({ route, navigation }) {
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? 'Updating...' : 'Save Changes'}
+              {loading ? t('editPlant.updating') : t('editPlant.saveChanges')}
             </Text>
           </TouchableOpacity>
           
@@ -209,7 +210,7 @@ export default function EditPlantScreen({ route, navigation }) {
             style={styles.cancelButton} 
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -217,7 +218,7 @@ export default function EditPlantScreen({ route, navigation }) {
             onPress={handleDelete}
           >
             <Ionicons name="trash" size={16} color="#ef4444" />
-            <Text style={styles.deleteButtonText}>Delete Plant</Text>
+            <Text style={styles.deleteButtonText}>{t('editPlant.deletePlant')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: 'white',
-     color: '#111827'
+    color: '#111827'
   },
   textArea: {
     height: 100,

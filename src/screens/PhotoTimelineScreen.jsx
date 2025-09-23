@@ -10,15 +10,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import i18n from '../locales/i18n';
 
 export default function PhotoTimelineScreen({ route }) {
   const { t } = useTranslation();
   const { plant } = route.params;
   const photos = plant.photos || [];
 
-  console.log('Current language:', i18n.language);
-  
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', { 

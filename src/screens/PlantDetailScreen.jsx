@@ -11,28 +11,25 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import { usePlants } from '../hooks/usePlants';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function PlantDetailScreen({ route, navigation }) {
+  const { t } = useTranslation();
   const { plant: routePlant } = route.params;
   const { plants, logCare, addPhoto, loadPlants } = usePlants();
   
   useFocusEffect(
   React.useCallback(() => {
-    loadPlants(); // This will refresh the plants data
+    loadPlants();
   }, [loadPlants])
 );
 
-
-  // Get fresh plant data from the hook instead of stale route params
   const plant = plants.find(p => p.id === routePlant.id) || routePlant;
-  //console.log('Rendering details for plant:', plant);
-  console.log('Plant location from state:', plants.find(p => p.id === routePlant.id)?.location);
-  console.log('Plant location from route:', routePlant.location);
-  // Use the same time calculation logic as PlantListScreen
+
   const getTimeDisplay = (lastCareTime) => {
-    if (!lastCareTime) return 'Never';
+    if (!lastCareTime) return t('plantList.never');
     
     const now = Date.now();
     const careTime = new Date(lastCareTime).getTime();
@@ -41,34 +38,40 @@ export default function PlantDetailScreen({ route, navigation }) {
     const minutes = Math.floor(diffMs / (1000 * 60));
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
     
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} minutes ago`;
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (days < 30) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
-    return `${Math.floor(days / 30)} month${Math.floor(days / 30) > 1 ? 's' : ''} ago`;
+    if (minutes < 1) return t('plantDetail.justNow');
+    if (minutes < 60) return t('plantDetail.minutesAgo', { minutes });
+    if (hours < 24) {
+      return hours === 1 ? t('plantDetail.hourAgo', { hours }) : t('plantDetail.hoursAgo', { hours });
+    }
+    if (days < 7) {
+      return days === 1 ? t('plantDetail.dayAgo', { days }) : t('plantDetail.daysAgo', { days });
+    }
+    if (days < 30) {
+      return weeks === 1 ? t('plantDetail.weekAgo', { weeks }) : t('plantDetail.weeksAgo', { weeks });
+    }
+    return months === 1 ? t('plantDetail.monthAgo', { months }) : t('plantDetail.monthsAgo', { months });
   };
 
   const getStatusColor = (lastCareTime, frequencyDays) => {
-    if (!lastCareTime) return '#ef4444'; // Red for never
+    if (!lastCareTime) return '#ef4444';
     
     const daysSince = Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24));
     const frequency = parseInt(frequencyDays || 7);
     
-    if (daysSince >= frequency) return '#ef4444'; // Red - overdue
-    if (daysSince >= frequency * 0.8) return '#f59e0b'; // Orange - due soon
-    return '#22c55e'; // Green - all good
+    if (daysSince >= frequency) return '#ef4444';
+    if (daysSince >= frequency * 0.8) return '#f59e0b';
+    return '#22c55e';
   };
 
-  // Calculate status using the same logic
   const waterTimeDisplay = getTimeDisplay(plant.lastWatered);
   const fertTimeDisplay = getTimeDisplay(plant.lastFertilized);
   
   const waterColor = getStatusColor(plant.lastWatered, plant.wateringFrequency);
   const fertColor = getStatusColor(plant.lastFertilized, plant.fertilizingFrequency);
 
-  // Determine if care is needed
   const daysSinceWatered = plant.lastWatered 
     ? Math.floor((Date.now() - new Date(plant.lastWatered)) / (1000 * 60 * 60 * 24))
     : null;
@@ -81,16 +84,18 @@ export default function PlantDetailScreen({ route, navigation }) {
   const needsFertilizer = !daysSinceFertilized || daysSinceFertilized >= parseInt(plant.fertilizingFrequency);
 
   const handleCareAction = async (careType) => {
+    const actionText = careType === 'water' ? t('plantDetail.watering').toLowerCase() : t('plantDetail.fertilizing').toLowerCase();
     Alert.alert(
-      'Mark as ' + (careType === 'water' ? 'watered' : 'fertilized') + '?',
-      'This will update your care log.',
+      t('reminders.actionTitle', { action: actionText, plantName: plant.name }),
+      t('reminders.confirmCareMessage', { action: actionText, plantName: plant.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: 'Confirm', 
+          text: t('reminders.yesDidIt'), 
           onPress: async () => {
             await logCare(plant.id, careType);
-            Alert.alert('Success', `${plant.name} has been ${careType === 'water' ? 'watered' : 'fertilized'}!`);
+            const pastTense = careType === 'water' ? t('reminders.watered') : t('reminders.fertilized');
+            Alert.alert(t('editPlant.successTitle'), t('reminders.careLoggedMessage', { plantName: plant.name, action: pastTense }));
           }
         }
       ]
@@ -99,12 +104,12 @@ export default function PlantDetailScreen({ route, navigation }) {
 
   const handleAddPhoto = () => {
     Alert.alert(
-      'Take New Photo',
-      'Choose how to add a new photo',
+      t('addPlant.takePhoto'),
+      t('reminders.actionMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Camera', onPress: takePicture },
-        { text: 'Gallery', onPress: pickImage }
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('addPlant.takePhoto'), onPress: takePicture },
+        { text: t('addPlant.gallery'), onPress: pickImage }
       ]
     );
   };
@@ -132,13 +137,16 @@ export default function PlantDetailScreen({ route, navigation }) {
     }
   };
 
-  // Get the latest photo from photos array (now consistent across all screens)
+  const getLocationDisplay = (locationKey) => {
+    if (!locationKey) return '';
+    return t(`locations.${locationKey}`, locationKey);
+  };
+
   const latestPhoto = plant.photos?.[plant.photos.length - 1];
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Plant Header */}
         <View style={styles.header}>
           {latestPhoto ? (
             <Image source={{ uri: latestPhoto.uri }} style={styles.plantImage} />
@@ -152,18 +160,17 @@ export default function PlantDetailScreen({ route, navigation }) {
           {plant.location && (
             <View style={styles.locationBadge}>
               <Ionicons name="location" size={16} color="#1d4ed8" />
-              <Text style={styles.locationText}>{plant.location}</Text>
+              <Text style={styles.locationText}>{getLocationDisplay(plant.location)}</Text>
             </View>
           )}
         </View>
 
-        {/* Care Status */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Care Status</Text>
+          <Text style={styles.cardTitle}>{t('plantDetail.careStatus')}</Text>
           <View style={styles.statusRow}>
             <View style={styles.statusItem}>
               <Ionicons name="water" size={20} color="#3b82f6" />
-              <Text style={styles.statusLabel}>Watering</Text>
+              <Text style={styles.statusLabel}>{t('plantDetail.watering')}</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: waterColor }]}>
               <Text style={styles.statusBadgeText}>{waterTimeDisplay}</Text>
@@ -173,7 +180,7 @@ export default function PlantDetailScreen({ route, navigation }) {
           <View style={styles.statusRow}>
             <View style={styles.statusItem}>
               <Ionicons name="nutrition" size={20} color="#f59e0b" />
-              <Text style={styles.statusLabel}>Fertilizing</Text>
+              <Text style={styles.statusLabel}>{t('plantDetail.fertilizing')}</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: fertColor }]}>
               <Text style={styles.statusBadgeText}>{fertTimeDisplay}</Text>
@@ -181,16 +188,15 @@ export default function PlantDetailScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Quick Actions */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Quick Actions</Text>
+          <Text style={styles.cardTitle}>{t('plantDetail.quickActions')}</Text>
           <View style={styles.actionRow}>
              <TouchableOpacity 
               style={styles.actionButtonOutline}
               onPress={handleAddPhoto}
             >
               <Ionicons name="camera" size={20} color="#6b7280" />
-              <Text style={styles.actionButtonOutlineText}>New Photo</Text>
+              <Text style={styles.actionButtonOutlineText}>{t('plantDetail.newPhoto')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -198,9 +204,8 @@ export default function PlantDetailScreen({ route, navigation }) {
               onPress={() => navigation.navigate('EditPlant', { plant })}
             >
               <Ionicons name="create" size={20} color="#6b7280" />
-              <Text style={styles.actionButtonOutlineText}>Edit Plant</Text>
+              <Text style={styles.actionButtonOutlineText}>{t('plantDetail.editPlant')}</Text>
             </TouchableOpacity>
-            
           </View>
           
           <View style={styles.actionRow}>
@@ -209,7 +214,7 @@ export default function PlantDetailScreen({ route, navigation }) {
               onPress={() => handleCareAction('water')}
             >
               <Ionicons name="water" size={20} color="white" />
-              <Text style={styles.actionButtonText}>Water</Text>
+              <Text style={styles.actionButtonText}>{t('plantDetail.water')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -217,40 +222,36 @@ export default function PlantDetailScreen({ route, navigation }) {
               onPress={() => handleCareAction('fertilize')}
             >
               <Ionicons name="nutrition" size={20} color="white" />
-              <Text style={styles.actionButtonText}>Fertilize</Text>
+              <Text style={styles.actionButtonText}>{t('plantDetail.fertilize')}</Text>
             </TouchableOpacity>
-            
-           
           </View>
           <View style={styles.actionRow}>
             <TouchableOpacity 
-                          style={styles.actionButtonOutline}
-                          onPress={() => navigation.navigate('PhotoTimeline', { plant })}
-                        >
+              style={styles.actionButtonOutline}
+              onPress={() => navigation.navigate('PhotoTimeline', { plant })}
+            >
               <Ionicons name="images" size={20} color="#6b7280" />
               <Text style={styles.actionButtonOutlineText}>
-                Timeline ({plant.photos?.length || 0})
+                {t('plantDetail.timeline')} ({plant.photos?.length || 0})
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Plant Info */}
         {plant.notes && (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Notes</Text>
+            <Text style={styles.cardTitle}>{t('addPlant.notes')}</Text>
             <Text style={styles.notesText}>{plant.notes}</Text>
           </View>
         )}
 
-        {/* Care Schedule */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Care Schedule</Text>
+          <Text style={styles.cardTitle}>{t('plantDetail.careSchedule')}</Text>
           <Text style={styles.scheduleText}>
-            💧 Water every {plant.wateringFrequency} days
+            💧 {t('plantDetail.waterEveryDays', { days: plant.wateringFrequency })}
           </Text>
           <Text style={styles.scheduleText}>
-            🌱 Fertilize every {plant.fertilizingFrequency} days
+            🌱 {t('plantDetail.fertilizeEveryDays', { days: plant.fertilizingFrequency })}
           </Text>
         </View>
       </ScrollView>

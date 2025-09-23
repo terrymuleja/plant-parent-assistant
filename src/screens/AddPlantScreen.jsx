@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import { usePlants } from '../hooks/usePlants';
 import { usePremium } from '../hooks/usePremium';
 
@@ -52,6 +53,7 @@ const SelectInput = ({ label, value, options, onSelect }) => {
 };
 
 export default function AddPlantScreen({ navigation }) {
+  const { t } = useTranslation();
   const { isPremium } = usePremium();
   const { addPlant, plants } = usePlants();
   const [formData, setFormData] = useState({
@@ -66,30 +68,30 @@ export default function AddPlantScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const locationOptions = [
-    { label: 'Living Room', value: 'living-room' },
-    { label: 'Bedroom', value: 'bedroom' },
-    { label: 'Kitchen', value: 'kitchen' },
-    { label: 'Bathroom', value: 'bathroom' },
-    { label: 'Office', value: 'office' },
-    { label: 'Balcony', value: 'balcony' },
-    { label: 'Garden', value: 'garden' },
-    { label: 'Other', value: 'other' },
+    { label: t('locations.living-room'), value: 'living-room' },
+    { label: t('locations.bedroom'), value: 'bedroom' },
+    { label: t('locations.kitchen'), value: 'kitchen' },
+    { label: t('locations.bathroom'), value: 'bathroom' },
+    { label: t('locations.office'), value: 'office' },
+    { label: t('locations.balcony'), value: 'balcony' },
+    { label: t('locations.garden'), value: 'garden' },
+    { label: t('locations.other'), value: 'other' },
   ];
 
   const wateringOptions = [
-    { label: 'Every day', value: '1' },
-    { label: 'Every 2-3 days', value: '3' },
-    { label: 'Weekly', value: '7' },
-    { label: 'Every 2 weeks', value: '14' },
-    { label: 'Monthly', value: '30' },
+    { label: t('watering.daily'), value: '1' },
+    { label: t('watering.every2-3days'), value: '3' },
+    { label: t('watering.weekly'), value: '7' },
+    { label: t('watering.biweekly'), value: '14' },
+    { label: t('watering.monthly'), value: '30' },
   ];
 
   const fertilizingOptions = [
-    { label: 'Every 2 weeks', value: '14' },
-    { label: 'Monthly', value: '30' },
-    { label: 'Every 2 months', value: '60' },
-    { label: 'Seasonally', value: '90' },
-    { label: 'Never', value: '365' },
+    { label: t('fertilizing.biweekly'), value: '14' },
+    { label: t('fertilizing.monthly'), value: '30' },
+    { label: t('fertilizing.bimonthly'), value: '60' },
+    { label: t('fertilizing.seasonally'), value: '90' },
+    { label: t('fertilizing.never'), value: '365' },
   ];
 
   const pickImage = async () => {
@@ -118,21 +120,20 @@ export default function AddPlantScreen({ navigation }) {
   };
 
   const handleSubmit = async () => {
-    console.log('handleSubmit called'); // Add this line
     if (!isPremium && plants.length >= 3) {
-    Alert.alert(
-      "Plant Limit Reached", 
-      "Free version allows up to 3 plants. Upgrade to Premium for unlimited plants and photo timeline!",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Upgrade ($7)", onPress: () => {} } // TODO: Add upgrade logic
-      ]
-    );
-    return;
-  }
+      Alert.alert(
+        t('alerts.plantLimitTitle'), 
+        t('alerts.plantLimitMessage'),
+        [
+          { text: t('common.cancel'), style: "cancel" },
+          { text: t('alerts.upgrade'), onPress: () => {} }
+        ]
+      );
+      return;
+    }
 
     if (!formData.name.trim()) {
-      Alert.alert("Error", "Plant name is required");
+      Alert.alert(t('alerts.error'), t('alerts.plantNameRequired'));
       return;
     }
 
@@ -141,7 +142,7 @@ export default function AddPlantScreen({ navigation }) {
       await addPlant(formData);
       navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", "Failed to add plant");
+      Alert.alert(t('alerts.error'), t('alerts.failedToAdd'));
     } finally {
       setLoading(false);
     }
@@ -150,77 +151,75 @@ export default function AddPlantScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>Add a new plant to your family</Text>
+        <Text style={styles.title}>{t('addPlant.title')}</Text>
 
-        {/* Photo Section */}
         <View style={styles.photoSection}>
-          <Text style={styles.label}>Plant Photo</Text>
+          <Text style={styles.label}>{t('addPlant.plantPhoto')}</Text>
           {formData.photo && (
             <Image source={{ uri: formData.photo }} style={styles.photoPreview} />
           )}
           <View style={styles.photoButtons}>
             <TouchableOpacity style={styles.photoButton} onPress={takePicture}>
               <Ionicons name="camera" size={20} color="#6b7280" />
-              <Text style={styles.photoButtonText}>Take Photo</Text>
+              <Text style={styles.photoButtonText}>{t('addPlant.takePhoto')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
               <Ionicons name="images" size={20} color="#6b7280" />
-              <Text style={styles.photoButtonText}>Gallery</Text>
+              <Text style={styles.photoButtonText}>{t('addPlant.gallery')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Basic Info */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Plant Name *</Text>
+          <Text style={styles.label}>{t('addPlant.plantNameRequired')}</Text>
           <TextInput
             style={styles.textInput}
             value={formData.name}
             onChangeText={(text) => setFormData({ ...formData, name: text })}
-            placeholder="e.g., My Fiddle Leaf Fig"
+            placeholder={t('addPlant.plantNamePlaceholder')}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Species</Text>
+          <Text style={styles.label}>{t('addPlant.species')}</Text>
           <TextInput
             style={styles.textInput}
             value={formData.species}
             onChangeText={(text) => setFormData({ ...formData, species: text })}
-            placeholder="e.g., Ficus lyrata"
+            placeholder={t('addPlant.speciesPlaceholder')}
           />
         </View>
 
         <SelectInput
-          label="Location"
+          label={t('addPlant.location')}
           value={formData.location}
           options={locationOptions}
           onSelect={(value) => setFormData({ ...formData, location: value })}
         />
 
-        <Text style={styles.sectionTitle}>Care Schedule</Text>
+        <Text style={styles.sectionTitle}>{t('addPlant.careSchedule')}</Text>
         
         <SelectInput
-          label="Watering Frequency"
+          label={t('addPlant.wateringFrequency')}
           value={formData.wateringFrequency}
           options={wateringOptions}
           onSelect={(value) => setFormData({ ...formData, wateringFrequency: value })}
         />
 
         <SelectInput
-          label="Fertilizing Frequency"
+          label={t('addPlant.fertilizingFrequency')}
           value={formData.fertilizingFrequency}
           options={fertilizingOptions}
           onSelect={(value) => setFormData({ ...formData, fertilizingFrequency: value })}
         />
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Notes</Text>
+          <Text style={styles.label}>{t('addPlant.notes')}</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
             value={formData.notes}
             onChangeText={(text) => setFormData({ ...formData, notes: text })}
-            placeholder="Any special care instructions or observations..."
+            placeholder={t('addPlant.notesPlaceholder')}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -234,7 +233,7 @@ export default function AddPlantScreen({ navigation }) {
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? 'Adding Plant...' : 'Add Plant'}
+              {loading ? t('addPlant.addingPlant') : t('addPlant.addPlantButton')}
             </Text>
           </TouchableOpacity>
           
@@ -242,7 +241,7 @@ export default function AddPlantScreen({ navigation }) {
             style={styles.cancelButton} 
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>{t('addPlant.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -280,7 +279,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: 'white',
-     color: '#111827',
+    color: '#111827',
   },
   textArea: {
     height: 100,

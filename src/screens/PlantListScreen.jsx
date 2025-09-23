@@ -11,11 +11,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { usePlants } from '../hooks/usePlants';
 
-const PlantCard = ({ plant, onPress }) => {
+const PlantCard = ({ plant, onPress, t }) => {
   const getTimeDisplay = (lastCareTime) => {
-    if (!lastCareTime) return 'Never';
+    if (!lastCareTime) return t('plantList.never');
     
     const now = Date.now();
     const careTime = new Date(lastCareTime).getTime();
@@ -25,7 +26,7 @@ const PlantCard = ({ plant, onPress }) => {
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    if (minutes < 1) return 'Now';
+    if (minutes < 1) return t('plantList.now');
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
@@ -34,27 +35,27 @@ const PlantCard = ({ plant, onPress }) => {
   };
 
   const getStatusColor = (lastCareTime, frequencyDays) => {
-    if (!lastCareTime) return '#ef4444'; // Red for never
+    if (!lastCareTime) return '#ef4444';
     
     const daysSince = Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24));
     const frequency = parseInt(frequencyDays || 7);
     
-    if (daysSince >= frequency) return '#ef4444'; // Red - overdue
-    if (daysSince >= frequency * 0.8) return '#f59e0b'; // Orange - due soon
-    return '#22c55e'; // Green - all good
+    if (daysSince >= frequency) return '#ef4444';
+    if (daysSince >= frequency * 0.8) return '#f59e0b';
+    return '#22c55e';
   };
 
   const getCompactStatus = (lastCareTime, type, frequency) => {
     const timeDisplay = getTimeDisplay(lastCareTime);
     
-    if (timeDisplay === 'Never') return 'Never';
+    if (timeDisplay === t('plantList.never')) return t('plantList.never');
     
     const daysSince = lastCareTime 
       ? Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24))
       : 999;
     const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
     
-    if (daysSince >= freq) return `Due ${timeDisplay}`;
+    if (daysSince >= freq) return t('plantList.due', { time: timeDisplay });
     return timeDisplay;
   };
 
@@ -83,14 +84,12 @@ const PlantCard = ({ plant, onPress }) => {
           )}
           
           <View style={styles.statusContainer}>
-            {/* Water status */}
             <View style={styles.statusRow}>
               <View style={[styles.statusDot, { backgroundColor: waterColor }]} />
               <Text style={styles.statusLabel}>💧</Text>
               <Text style={styles.statusTime} numberOfLines={1}>{waterText}</Text>
             </View>
             
-            {/* Fertilizer status */}
             <View style={styles.statusRow}>
               <View style={[styles.statusDot, { backgroundColor: fertColor }]} />
               <Text style={styles.statusLabel}>🌱</Text>
@@ -98,7 +97,6 @@ const PlantCard = ({ plant, onPress }) => {
             </View>
           </View>
           
-          {/* Photos indicator */}
           {plant.photos?.length > 0 && (
             <View style={styles.photoIndicator}>
               <Text style={styles.photoText}>📸 {plant.photos.length}</Text>
@@ -113,9 +111,9 @@ const PlantCard = ({ plant, onPress }) => {
 };
 
 export default function PlantListScreen({ navigation }) {
+  const { t } = useTranslation();
   const { plants, loading, loadPlants } = usePlants();
 
-  // Refresh data when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       loadPlants();
@@ -126,6 +124,7 @@ export default function PlantListScreen({ navigation }) {
     <PlantCard 
       plant={item} 
       onPress={() => navigation.navigate('PlantDetail', { plant: item })}
+      t={t}
     />
   );
 
@@ -133,7 +132,7 @@ export default function PlantListScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text>Loading your plants...</Text>
+          <Text>{t('plantList.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -142,9 +141,9 @@ export default function PlantListScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Plant Family 🌱</Text>
+        <Text style={styles.headerTitle}>{t('plantList.title')}</Text>
         <Text style={styles.headerSubtitle}>
-          {plants.length} plants • Tap to view details
+          {t('plantList.subtitle', { count: plants.length })}
         </Text>
       </View>
       
@@ -158,7 +157,7 @@ export default function PlantListScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Ionicons name="leaf-outline" size={64} color="#d1d5db" />
             <Text style={styles.emptyText}>
-              No plants yet!{'\n'}Add your first plant to get started
+              {t('plantList.emptyTitle')}{'\n'}{t('plantList.emptyMessage')}
             </Text>
           </View>
         }
@@ -232,7 +231,7 @@ const styles = StyleSheet.create({
   plantInfo: {
     flex: 1,
     marginLeft: 12,
-    minWidth: 0, // Important for text truncation
+    minWidth: 0,
   },
   plantName: {
     fontSize: 16,
@@ -260,13 +259,13 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    width: 16, // Fixed width for emoji alignment
+    width: 16,
   },
   statusTime: {
     fontSize: 12,
     color: '#6b7280',
     fontWeight: '500',
-    flex: 1, // Takes remaining space
+    flex: 1,
   },
   photoIndicator: {
     marginTop: 6,

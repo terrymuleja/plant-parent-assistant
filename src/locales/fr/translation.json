@@ -85,7 +85,27 @@
     "today": "aujourd'hui",
     "overdue": "Rouge - en retard",
     "dueSoon": "Orange - bientôt dû", 
-    "allGood": "Vert - tout va bien"
+    "allGood": "Vert - tout va bien",
+    "careStatus": "État des soins",
+    "watering": "Arrosage",
+    "fertilizing": "Fertilisation",
+    "quickActions": "Actions rapides",
+    "newPhoto": "Nouvelle photo",
+    "editPlant": "Modifier la plante",
+    "water": "Arroser",
+    "fertilize": "Fertiliser",
+    "timeline": "Chronologie",
+    "careSchedule": "Programme d'entretien",
+    "waterEveryDays": "Arroser tous les {{days}} jours",
+    "fertilizeEveryDays": "Fertiliser tous les {{days}} jours",
+    "justNow": "À l'instant",
+    "minutesAgo": "il y a {{minutes}} minutes",
+    "hourAgo": "il y a {{hours}} heure",
+    "hoursAgo": "il y a {{hours}} heures",
+    "dayAgo": "il y a {{days}} jour",
+    "weekAgo": "il y a {{weeks}} semaine",
+    "weeksAgo": "il y a {{weeks}} semaines",
+    "monthAgo": "il y a {{months}} mois"
   },
   "photoTimeline": {
     "today": "Aujourd'hui",
@@ -168,13 +188,13 @@
     "supportDescription": "Obtenez de l'aide ou envoyez des commentaires à notre équipe."
   },
   "navigation": {
-  "plants": "Plantes",
-  "reminders": "Rappels", 
-  "settings": "Paramètres",
-  "myPlants": "Mes Plantes",
-  "addNewPlant": "Ajouter une Plante",
-  "plantDetails": "Détails de la Plante",
-  "editPlant": "Modifier la Plante",
-  "growthTimeline": "Chronologie de Croissance"
+    "plants": "Plantes",
+    "reminders": "Rappels", 
+    "settings": "Paramètres",
+    "myPlants": "Mes Plantes",
+    "addNewPlant": "Ajouter une Plante",
+    "plantDetails": "Détails de la Plante",
+    "editPlant": "Modifier la Plante",
+    "growthTimeline": "Chronologie de Croissance"
   }
 }
