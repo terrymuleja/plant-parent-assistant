@@ -85,7 +85,27 @@
     "today": "today",
     "overdue": "Red - overdue",
     "dueSoon": "Orange - due soon", 
-    "allGood": "Green - all good"
+    "allGood": "Green - all good",
+    "careStatus": "Care Status",
+    "watering": "Watering",
+    "fertilizing": "Fertilizing",
+    "quickActions": "Quick Actions",
+    "newPhoto": "New Photo",
+    "editPlant": "Edit Plant",
+    "water": "Water",
+    "fertilize": "Fertilize",
+    "timeline": "Timeline",
+    "careSchedule": "Care Schedule",
+    "waterEveryDays": "Water every {{days}} days",
+    "fertilizeEveryDays": "Fertilize every {{days}} days",
+    "justNow": "Just now",
+    "minutesAgo": "{{minutes}} minutes ago",
+    "hourAgo": "{{hours}} hour ago",
+    "hoursAgo": "{{hours}} hours ago",
+    "dayAgo": "{{days}} day ago",
+    "weekAgo": "{{weeks}} week ago",
+    "weeksAgo": "{{weeks}} weeks ago",
+    "monthAgo": "{{months}} month ago"
   },
   "photoTimeline": {
     "today": "Today",
@@ -168,13 +188,13 @@
     "supportDescription": "Get help or send feedback to our team."
   },
   "navigation": {
-  "plants": "Plants",
-  "reminders": "Reminders", 
-  "settings": "Settings",
-  "myPlants": "My Plants",
-  "addNewPlant": "Add New Plant",
-  "plantDetails": "Plant Details",
-  "editPlant": "Edit Plant",
-  "growthTimeline": "Growth Timeline"
-}
+    "plants": "Plants",
+    "reminders": "Reminders", 
+    "settings": "Settings",
+    "myPlants": "My Plants",
+    "addNewPlant": "Add New Plant",
+    "plantDetails": "Plant Details",
+    "editPlant": "Edit Plant",
+    "growthTimeline": "Growth Timeline"
+  }
 }
