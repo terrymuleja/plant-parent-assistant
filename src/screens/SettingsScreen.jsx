@@ -6,7 +6,9 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Alert
+  Alert,
+  Modal,
+  Pressable
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -25,17 +27,117 @@ const SettingItem = ({ title, value, onPress, icon, showArrow = true }) => (
   </TouchableOpacity>
 );
 
+const LanguagePicker = ({ visible, onClose, languages, currentLanguage, onSelect, t }) => (
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={visible}
+    onRequestClose={onClose}
+  >
+    <Pressable style={styles.modalOverlay} onPress={onClose}>
+      <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>{t('settings.selectLanguage')}</Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Ionicons name="close" size={24} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.modalSubtitle}>{t('settings.languageDescription')}</Text>
+        
+        <ScrollView style={styles.optionsList}>
+          {languages.map((lang) => (
+            <TouchableOpacity
+              key={lang.code}
+              style={[
+                styles.languageOption,
+                currentLanguage === lang.code && styles.selectedLanguageOption
+              ]}
+              onPress={() => {
+                onSelect(lang);
+                onClose();
+              }}
+            >
+              <Text style={styles.languageFlag}>{lang.flag}</Text>
+              <Text style={[
+                styles.languageText,
+                currentLanguage === lang.code && styles.selectedLanguageText
+              ]}>
+                {lang.name}
+              </Text>
+              {currentLanguage === lang.code && (
+                <Ionicons name="checkmark" size={20} color="#22c55e" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </Pressable>
+    </Pressable>
+  </Modal>
+);
+
+const DateFormatPicker = ({ visible, onClose, formats, currentFormat, onSelect, t }) => (
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={visible}
+    onRequestClose={onClose}
+  >
+    <Pressable style={styles.modalOverlay} onPress={onClose}>
+      <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>{t('settings.selectDateFormat')}</Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Ionicons name="close" size={24} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.modalSubtitle}>{t('settings.dateFormatDescription')}</Text>
+        
+        <ScrollView style={styles.optionsList}>
+          {formats.map((format) => (
+            <TouchableOpacity
+              key={format.format}
+              style={[
+                styles.formatOption,
+                currentFormat === format.format && styles.selectedFormatOption
+              ]}
+              onPress={() => {
+                onSelect(format);
+                onClose();
+              }}
+            >
+              <View style={styles.formatInfo}>
+                <Text style={[
+                  styles.formatLabel,
+                  currentFormat === format.format && styles.selectedFormatText
+                ]}>
+                  {format.label}
+                </Text>
+                <Text style={styles.formatRegion}>({format.region})</Text>
+              </View>
+              {currentFormat === format.format && (
+                <Ionicons name="checkmark" size={20} color="#22c55e" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </Pressable>
+    </Pressable>
+  </Modal>
+);
+
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+  const [showDateFormatPicker, setShowDateFormatPicker] = useState(false);
 
   const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' }
-];
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' }
+  ];
 
   const dateFormats = [
     { format: 'DD/MM/YYYY', label: '23/09/2025', region: 'European' },
@@ -44,7 +146,6 @@ export default function SettingsScreen() {
     { format: 'DD MMM YYYY', label: '23 Sep 2025', region: 'Long' }
   ];
 
-  // Load saved settings on mount
   useEffect(() => {
     loadSettings();
   }, []);
@@ -69,39 +170,15 @@ export default function SettingsScreen() {
     }
   };
 
-  const showLanguagePicker = () => {
-    Alert.alert(
-      t('settings.selectLanguage'),
-      t('settings.languageDescription'),
-      [
-        ...languages.map(lang => ({
-          text: `${lang.flag} ${lang.name}`,
-          onPress: async () => {
-            setCurrentLanguage(lang.code);
-            await i18n.changeLanguage(lang.code);
-            await saveSettings('app_language', lang.code);
-          }
-        })),
-        { text: t('common.cancel'), style: 'cancel' }
-      ]
-    );
+  const handleLanguageSelect = async (lang) => {
+    setCurrentLanguage(lang.code);
+    await i18n.changeLanguage(lang.code);
+    await saveSettings('app_language', lang.code);
   };
 
-  const showDateFormatPicker = () => {
-    Alert.alert(
-      t('settings.selectDateFormat'),
-      t('settings.dateFormatDescription'),
-      [
-        ...dateFormats.map(format => ({
-          text: `${format.label} (${format.region})`,
-          onPress: async () => {
-            setDateFormat(format.format);
-            await saveSettings('date_format', format.format);
-          }
-        })),
-        { text: t('common.cancel'), style: 'cancel' }
-      ]
-    );
+  const handleDateFormatSelect = async (format) => {
+    setDateFormat(format.format);
+    await saveSettings('date_format', format.format);
   };
 
   const getCurrentLanguageName = () => {
@@ -129,14 +206,14 @@ export default function SettingsScreen() {
           <SettingItem
             title={t('settings.language')}
             value={getCurrentLanguageName()}
-            onPress={showLanguagePicker}
+            onPress={() => setShowLanguagePicker(true)}
             icon="language"
           />
           
           <SettingItem
             title={t('settings.dateFormat')}
             value={getCurrentDateFormatLabel()}
-            onPress={showDateFormatPicker}
+            onPress={() => setShowDateFormatPicker(true)}
             icon="calendar"
           />
         </View>
@@ -207,6 +284,24 @@ export default function SettingsScreen() {
         </View>
 
       </ScrollView>
+
+      <LanguagePicker
+        visible={showLanguagePicker}
+        onClose={() => setShowLanguagePicker(false)}
+        languages={languages}
+        currentLanguage={currentLanguage}
+        onSelect={handleLanguageSelect}
+        t={t}
+      />
+
+      <DateFormatPicker
+        visible={showDateFormatPicker}
+        onClose={() => setShowDateFormatPicker(false)}
+        formats={dateFormats}
+        currentFormat={dateFormat}
+        onSelect={handleDateFormatSelect}
+        t={t}
+      />
     </SafeAreaView>
   );
 }
@@ -273,6 +368,104 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   settingValue: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 16,
+  },
+  optionsList: {
+    maxHeight: 300,
+  },
+  // Language picker styles
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  selectedLanguageOption: {
+    backgroundColor: '#f0f9ff',
+    borderWidth: 1,
+    borderColor: '#22c55e',
+  },
+  languageFlag: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  languageText: {
+    fontSize: 16,
+    color: '#111827',
+    flex: 1,
+  },
+  selectedLanguageText: {
+    color: '#22c55e',
+    fontWeight: '600',
+  },
+  // Date format picker styles
+  formatOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  selectedFormatOption: {
+    backgroundColor: '#f0f9ff',
+    borderWidth: 1,
+    borderColor: '#22c55e',
+  },
+  formatInfo: {
+    flex: 1,
+  },
+  formatLabel: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  selectedFormatText: {
+    color: '#22c55e',
+    fontWeight: '600',
+  },
+  formatRegion: {
     fontSize: 14,
     color: '#6b7280',
     marginTop: 2,
