@@ -64,7 +64,7 @@ const PlantCard = ({ plant, onPress, t }) => {
   const waterText = getCompactStatus(plant.lastWatered, 'water', plant.wateringFrequency);
   const fertText = getCompactStatus(plant.lastFertilized, 'fertiliz', plant.fertilizingFrequency);
 
-  const latestPhoto = plant.photos?.[plant.photos.length - 1];
+  const latestPhoto = plant.photos?.[plant.photos?.length - 1];
 
   return (
     <TouchableOpacity style={styles.plantCard} onPress={onPress}>
@@ -99,7 +99,7 @@ const PlantCard = ({ plant, onPress, t }) => {
           
           {plant.photos?.length > 0 && (
             <View style={styles.photoIndicator}>
-              <Text style={styles.photoText}>📸 {plant.photos.length}</Text>
+              <Text style={styles.photoText}>📸 {plant.photos?.length}</Text>
             </View>
           )}
         </View>
@@ -112,7 +112,7 @@ const PlantCard = ({ plant, onPress, t }) => {
 
 export default function PlantListScreen({ navigation }) {
   const { t } = useTranslation();
-  const { plants, loading, loadPlants } = usePlants();
+  const { plants = [], loading, loadPlants } = usePlants(); // Added default empty array
 
   useFocusEffect(
     React.useCallback(() => {
@@ -143,7 +143,7 @@ export default function PlantListScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('plantList.title')}</Text>
         <Text style={styles.headerSubtitle}>
-          {t('plantList.subtitle', { count: plants.length })}
+          {t('plantList.subtitle', { count: plants?.length })}
         </Text>
       </View>
       
