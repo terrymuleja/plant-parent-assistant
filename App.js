@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import './src/locales/i18n';
+import i18n from './src/locales/i18n';
 
 import PlantListScreen from './src/screens/PlantListScreen';
 import EditPlantScreen from './src/screens/EditPlantScreen';
@@ -94,6 +95,54 @@ function MainTabs() {
 }
 
 export default function App() {
+  // ADD i18n INITIALIZATION STATE
+  const [isI18nInitialized, setIsI18nInitialized] = useState(false);
+
+  // INITIALIZE i18n PROPERLY - Wait for it to be ready
+  useEffect(() => {
+    const initI18n = async () => {
+      try {
+        // Check if i18n is already initialized
+        if (i18n.isInitialized) {
+          setIsI18nInitialized(true);
+          return;
+        }
+
+        // Wait for i18n to be ready
+        const checkI18nReady = () => {
+          if (i18n.isInitialized) {
+            setIsI18nInitialized(true);
+          } else {
+            // Check again in next tick
+            setTimeout(checkI18nReady, 10);
+          }
+        };
+        
+        checkI18nReady();
+      } catch (error) {
+        console.error('Error initializing i18n:', error);
+        // Set as initialized anyway to prevent infinite loading
+        setIsI18nInitialized(true);
+      }
+    };
+
+    initI18n();
+  }, []);
+
+  // WAIT FOR i18n TO BE READY BEFORE RENDERING COMPONENTS
+  if (!isI18nInitialized) {
+    return (
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+      }}>
+        <ActivityIndicator size="large" color="#22c55e" />
+      </View>
+    );
+  }
+
   return (
      <PremiumProvider>
       <NavigationContainer>
