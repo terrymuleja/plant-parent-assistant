@@ -39,6 +39,13 @@ const initI18n = async () => {
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
+      // Add this to handle undefined interpolation values
+      format: function(value, format, lng) {
+        if (value === undefined || value === null) {
+          return '';
+        }
+        return value;
+      }
     },
     react: {
       useSuspense: false, // Important: prevents loading issues
