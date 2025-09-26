@@ -3,10 +3,10 @@ import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 
 // Import translation files using ES6 imports
-import en from '../en/translation.json';
-import fr from '../fr/translation.json';
-import nl from '../nl/translation.json';
-import es from '../es/translation.json';
+import en from './en/translation.json';
+import fr from './fr/translation.json';
+import nl from './nl/translation.json';
+import es from './es/translation.json';
 
 const locale = getLocales()[0]?.languageCode ?? 'en';
 
