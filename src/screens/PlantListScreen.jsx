@@ -21,30 +21,22 @@ const PlantCard = ({ plant, onPress, t }) => {
   }
 
   const getTimeDisplay = (lastCareTime) => {
-    try {
-      if (!lastCareTime) return t('plantList.never');
-      
-      const now = Date.now();
-      const careTime = new Date(lastCareTime).getTime();
-      
-      if (isNaN(careTime)) return t('plantList.never');
-      
-      const diffMs = now - careTime;
-      
-      const minutes = Math.floor(diffMs / (1000 * 60));
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      
-      if (minutes < 1) return t('plantList.now');
-      if (minutes < 60) return `${minutes}m`;
-      if (hours < 24) return `${hours}h`;
-      if (days < 7) return `${days}d`;
-      if (days < 30) return `${Math.floor(days / 7)}w`;
-      return `${Math.floor(days / 30)}mo`;
-    } catch (error) {
-      console.error('Error in getTimeDisplay:', error);
-      return 'Error';
-    }
+    if (!lastCareTime) return t('plantList.never');
+    
+    const now = Date.now();
+    const careTime = new Date(lastCareTime).getTime();
+    const diffMs = now - careTime;
+    
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 1) return t('plantList.now');
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}d`;
+    if (days < 30) return `${Math.floor(days / 7)}w`;
+    return `${Math.floor(days / 30)}mo`;
   };
 
   const getStatusColor = (lastCareTime, frequencyDays) => {
@@ -59,31 +51,17 @@ const PlantCard = ({ plant, onPress, t }) => {
   };
 
   const getCompactStatus = (lastCareTime, type, frequency) => {
-    try {
-      const timeDisplay = getTimeDisplay(lastCareTime);
-      
-      if (!timeDisplay || timeDisplay === t('plantList.never')) {
-        return t('plantList.never');
-      }
-      
-      const daysSince = lastCareTime 
-        ? Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24))
-        : 999;
-      const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
-      
-      if (daysSince >= freq) {
-        // Keep the translation but ensure timeDisplay is never undefined/null
-        const safeTime = timeDisplay || '';
-        if (safeTime === '') {
-          return t('plantList.never');
-        }
-        return t('plantList.due', { time: safeTime });
-      }
-      return timeDisplay;
-    } catch (error) {
-      console.error('Error in getCompactStatus:', error);
-      return 'Error';
-    }
+    const timeDisplay = getTimeDisplay(lastCareTime);
+    
+    if (timeDisplay === t('plantList.never')) return t('plantList.never');
+    
+    const daysSince = lastCareTime 
+      ? Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24))
+      : 999;
+    const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
+    
+    if (daysSince >= freq) return t('plantList.due', { time: timeDisplay });
+    return timeDisplay;
   };
 
   const waterColor = getStatusColor(plant.lastWatered, plant.wateringFrequency);
@@ -91,20 +69,7 @@ const PlantCard = ({ plant, onPress, t }) => {
   const waterText = getCompactStatus(plant.lastWatered, 'water', plant.wateringFrequency);
   const fertText = getCompactStatus(plant.lastFertilized, 'fertiliz', plant.fertilizingFrequency);
 
-  // Fix the photos.length issue - this might be where the crash happens
-  const safePhotos = plant.photos || [];
-  let latestPhoto = null;
-  let photoCount = 0;
-  
-  // Avoid .length completely - use for...of loop instead
-  if (Array.isArray(safePhotos)) {
-    for (const photo of safePhotos) {
-      if (photo) {
-        photoCount++;
-        latestPhoto = photo; // This will be the last valid photo
-      }
-    }
-  }
+  const latestPhoto = plant.photos?.[plant.photos?.length - 1];
 
   return (
     <TouchableOpacity style={styles.plantCard} onPress={onPress}>
@@ -118,7 +83,7 @@ const PlantCard = ({ plant, onPress, t }) => {
         )}
         
         <View style={styles.plantInfo}>
-          <Text style={styles.plantName} numberOfLines={1}>{plant.name || 'Unnamed Plant'}</Text>
+          <Text style={styles.plantName} numberOfLines={1}>{plant.name}</Text>
           {plant.species && (
             <Text style={styles.plantSpecies} numberOfLines={1}>{plant.species}</Text>
           )}
@@ -137,9 +102,9 @@ const PlantCard = ({ plant, onPress, t }) => {
             </View>
           </View>
           
-          {photoCount > 0 && (
+          {plant.photos?.length > 0 && (
             <View style={styles.photoIndicator}>
-              <Text style={styles.photoText}>📸 {photoCount}</Text>
+              <Text style={styles.photoText}>📸 {plant.photos?.length}</Text>
             </View>
           )}
         </View>
@@ -152,39 +117,24 @@ const PlantCard = ({ plant, onPress, t }) => {
 
 export default function PlantListScreen({ navigation }) {
   const { t } = useTranslation();
-  const { plants, loading, loadPlants } = usePlants();
+  const { plants = [], loading, loadPlants } = usePlants();
 
-  console.log('PlantListScreen render - plants:', plants);
-  console.log('PlantListScreen render - typeof plants:', typeof plants);
-  console.log('PlantListScreen render - Array.isArray(plants):', Array.isArray(plants));
-
-  const safePlants = Array.isArray(plants) ? plants : [];
-  
-  // Avoid .length - count manually
-  let plantCount = 0;
-  for (const plant of safePlants) {
-    if (plant) plantCount++;
-  }
-
+  // THE FIX: Ensure loadPlants is never undefined in the dependency array
   useFocusEffect(
     React.useCallback(() => {
-      console.log('PlantListScreen - useFocusEffect triggered, calling loadPlants');
       if (loadPlants) {
         loadPlants();
       }
-    }, [loadPlants])
+    }, [loadPlants || (() => {})]) // <- This is the fix!
   );
 
-  const renderPlantCard = ({ item, index }) => {
-    console.log(`Rendering plant ${index}:`, item);
-    return (
-      <PlantCard 
-        plant={item} 
-        onPress={() => navigation.navigate('PlantDetail', { plant: item })}
-        t={t}
-      />
-    );
-  };
+  const renderPlantCard = ({ item }) => (
+    <PlantCard 
+      plant={item} 
+      onPress={() => navigation.navigate('PlantDetail', { plant: item })}
+      t={t}
+    />
+  );
 
   if (loading) {
     return (
@@ -201,20 +151,14 @@ export default function PlantListScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('plantList.title')}</Text>
         <Text style={styles.headerSubtitle}>
-          {t('plantList.subtitle', { count: plantCount })}
+          {t('plantList.subtitle', { count: plants?.length })}
         </Text>
       </View>
       
       <FlatList
-        data={safePlants}
+        data={plants}
         renderItem={renderPlantCard}
-        keyExtractor={(item, index) => {
-          if (item && item.id) {
-            return item.id;
-          }
-          console.warn(`Plant at index ${index} missing id:`, item);
-          return `plant-${index}`;
-        }}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
