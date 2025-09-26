@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next'; // REMOVED
+import { useTranslation } from 'react-i18next'; // ADDED BACK
 import { usePlants } from '../hooks/usePlants';
 
 const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
@@ -116,7 +116,7 @@ const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
 };
 
 export default function PlantListScreen({ navigation }) {
-  // const { t } = useTranslation(); // REMOVED
+  const { t } = useTranslation(); // ADDED BACK but not using yet
   const { plants = [], loading, loadPlants } = usePlants();
 
   useFocusEffect(
@@ -139,7 +139,7 @@ export default function PlantListScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text>Loading your plants...</Text> {/* HARDCODED */}
+          <Text>{t('plantList.loading')}</Text> {/* FIRST TRANSLATION TEST */}
         </View>
       </SafeAreaView>
     );
