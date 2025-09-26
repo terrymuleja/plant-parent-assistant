@@ -11,17 +11,17 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next'; // ADDED BACK
+import { useTranslation } from 'react-i18next';
 import { usePlants } from '../hooks/usePlants';
 
-const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
+const PlantCard = ({ plant, onPress, t }) => {
   if (!plant) {
     console.warn('PlantCard received null/undefined plant');
     return null;
   }
 
   const getTimeDisplay = (lastCareTime) => {
-    if (!lastCareTime) return 'Never'; // HARDCODED
+    if (!lastCareTime) return t('plantList.never');
     
     const now = Date.now();
     const careTime = new Date(lastCareTime).getTime();
@@ -31,7 +31,7 @@ const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    if (minutes < 1) return 'Now'; // HARDCODED
+    if (minutes < 1) return t('plantList.now');
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
@@ -53,14 +53,14 @@ const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
   const getCompactStatus = (lastCareTime, type, frequency) => {
     const timeDisplay = getTimeDisplay(lastCareTime);
     
-    if (timeDisplay === 'Never') return 'Never'; // HARDCODED
+    if (timeDisplay === t('plantList.never')) return t('plantList.never');
     
     const daysSince = lastCareTime 
       ? Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24))
       : 999;
     const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
     
-    if (daysSince >= freq) return `Due ${timeDisplay}`; // HARDCODED, NO TRANSLATION
+    if (daysSince >= freq) return t('plantList.due', { time: timeDisplay });
     return timeDisplay;
   };
 
@@ -116,19 +116,8 @@ const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
 };
 
 export default function PlantListScreen({ navigation }) {
-  const { t, ready } = useTranslation(); // Check if i18next is ready
+  const { t } = useTranslation();
   const { plants = [], loading, loadPlants } = usePlants();
-
-  // Use fallback text if translations aren't ready
-  const getText = (key, fallback) => {
-    if (!ready) return fallback;
-    try {
-      return t(key);
-    } catch (error) {
-      console.error('Translation error:', error);
-      return fallback;
-    }
-  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -142,7 +131,7 @@ export default function PlantListScreen({ navigation }) {
     <PlantCard 
       plant={item} 
       onPress={() => navigation.navigate('PlantDetail', { plant: item })}
-      // t={t} // REMOVED
+      t={t}
     />
   );
 
@@ -150,7 +139,7 @@ export default function PlantListScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text>{getText('plantList.loading', 'Loading your plants...')}</Text>
+          <Text>{t('plantList.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -159,9 +148,9 @@ export default function PlantListScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Plant Family 🌱</Text> {/* HARDCODED */}
+        <Text style={styles.headerTitle}>{t('plantList.title')}</Text>
         <Text style={styles.headerSubtitle}>
-          {plants?.length} plants • Tap to view details {/* HARDCODED */}
+          {t('plantList.subtitle', { count: plants?.length })}
         </Text>
       </View>
       
@@ -175,7 +164,7 @@ export default function PlantListScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Ionicons name="leaf-outline" size={64} color="#d1d5db" />
             <Text style={styles.emptyText}>
-              No plants yet!{'\n'}Add your first plant to get started {/* HARDCODED */}
+              {t('plantList.emptyTitle')}{'\n'}{t('plantList.emptyMessage')}
             </Text>
           </View>
         }
