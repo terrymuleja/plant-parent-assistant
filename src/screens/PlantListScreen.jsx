@@ -116,8 +116,19 @@ const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
 };
 
 export default function PlantListScreen({ navigation }) {
-  const { t } = useTranslation(); // ADDED BACK but not using yet
+  const { t, ready } = useTranslation(); // Check if i18next is ready
   const { plants = [], loading, loadPlants } = usePlants();
+
+  // Use fallback text if translations aren't ready
+  const getText = (key, fallback) => {
+    if (!ready) return fallback;
+    try {
+      return t(key);
+    } catch (error) {
+      console.error('Translation error:', error);
+      return fallback;
+    }
+  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -139,7 +150,7 @@ export default function PlantListScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text>{t('plantList.loading')}</Text> {/* FIRST TRANSLATION TEST */}
+          <Text>{getText('plantList.loading', 'Loading your plants...')}</Text>
         </View>
       </SafeAreaView>
     );
