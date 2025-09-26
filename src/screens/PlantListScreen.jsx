@@ -21,15 +21,31 @@ const PlantCard = ({ plant, onPress, t }) => {
     return null;
   }
 
+  // Safe translation wrapper - this is where the length error likely happens
+  const safeT = (key, options = {}) => {
+    try {
+      // Ensure all values are safe before passing to translation
+      const safeOptions = {};
+      Object.keys(options).forEach(k => {
+        const val = options[k];
+        safeOptions[k] = (val === null || val === undefined) ? '' : String(val);
+      });
+      return t(key, safeOptions);
+    } catch (error) {
+      console.error('Translation error in PlantCard:', key, error);
+      return key; // fallback to key
+    }
+  };
+
   const getTimeDisplay = (lastCareTime) => {
     try {
-      if (!lastCareTime) return t('plantList.never');
+      if (!lastCareTime) return safeT('plantList.never');
       
       const now = Date.now();
       const careTime = new Date(lastCareTime).getTime();
       
       // Check for invalid dates
-      if (isNaN(careTime)) return t('plantList.never');
+      if (isNaN(careTime)) return safeT('plantList.never');
       
       const diffMs = now - careTime;
       
@@ -37,7 +53,7 @@ const PlantCard = ({ plant, onPress, t }) => {
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       
-      if (minutes < 1) return t('plantList.now');
+      if (minutes < 1) return safeT('plantList.now');
       if (minutes < 60) return `${minutes}m`;
       if (hours < 24) return `${hours}h`;
       if (days < 7) return `${days}d`;
@@ -64,8 +80,8 @@ const PlantCard = ({ plant, onPress, t }) => {
     try {
       const timeDisplay = getTimeDisplay(lastCareTime);
       
-      if (!timeDisplay || timeDisplay === t('plantList.never')) {
-        return t('plantList.never');
+      if (!timeDisplay || timeDisplay === safeT('plantList.never')) {
+        return safeT('plantList.never');
       }
       
       const daysSince = lastCareTime 
@@ -74,9 +90,9 @@ const PlantCard = ({ plant, onPress, t }) => {
       const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
       
       if (daysSince >= freq) {
-        // Ensure timeDisplay is a string before passing to translation
+        // This is likely where the crash happens - ensure timeDisplay is a string
         const safeTimeDisplay = String(timeDisplay || '');
-        return t('plantList.due', { time: safeTimeDisplay });
+        return safeT('plantList.due', { time: safeTimeDisplay });
       }
       return timeDisplay;
     } catch (error) {
@@ -142,6 +158,22 @@ export default function PlantListScreen({ navigation }) {
   const { t } = useTranslation();
   const { plants, loading, loadPlants } = usePlants();
 
+  // Safe translation wrapper to catch length errors
+  const safeT = (key, options = {}) => {
+    try {
+      // Ensure all values are safe before passing to translation
+      const safeOptions = {};
+      Object.keys(options).forEach(k => {
+        const val = options[k];
+        safeOptions[k] = (val === null || val === undefined) ? 0 : val;
+      });
+      return t(key, safeOptions);
+    } catch (error) {
+      console.error('Translation error:', key, error);
+      return key; // fallback to key
+    }
+  };
+
   // Debug logging to identify the issue
   console.log('PlantListScreen render - plants:', plants);
   console.log('PlantListScreen render - typeof plants:', typeof plants);
@@ -205,7 +237,7 @@ export default function PlantListScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Ionicons name="leaf-outline" size={64} color="#d1d5db" />
             <Text style={styles.emptyText}>
-              {t('plantList.emptyTitle')}{'\n'}{t('plantList.emptyMessage')}
+              {safeT('plantList.emptyTitle')}{'\n'}{safeT('plantList.emptyMessage')}
             </Text>
           </View>
         }
