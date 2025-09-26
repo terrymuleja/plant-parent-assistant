@@ -11,17 +11,17 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next'; // REMOVED
 import { usePlants } from '../hooks/usePlants';
 
-const PlantCard = ({ plant, onPress, t }) => {
+const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
   if (!plant) {
     console.warn('PlantCard received null/undefined plant');
     return null;
   }
 
   const getTimeDisplay = (lastCareTime) => {
-    if (!lastCareTime) return t('plantList.never');
+    if (!lastCareTime) return 'Never'; // HARDCODED
     
     const now = Date.now();
     const careTime = new Date(lastCareTime).getTime();
@@ -31,7 +31,7 @@ const PlantCard = ({ plant, onPress, t }) => {
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    if (minutes < 1) return t('plantList.now');
+    if (minutes < 1) return 'Now'; // HARDCODED
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
@@ -53,14 +53,14 @@ const PlantCard = ({ plant, onPress, t }) => {
   const getCompactStatus = (lastCareTime, type, frequency) => {
     const timeDisplay = getTimeDisplay(lastCareTime);
     
-    if (timeDisplay === t('plantList.never')) return t('plantList.never');
+    if (timeDisplay === 'Never') return 'Never'; // HARDCODED
     
     const daysSince = lastCareTime 
       ? Math.floor((Date.now() - new Date(lastCareTime)) / (1000 * 60 * 60 * 24))
       : 999;
     const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
     
-    if (daysSince >= freq) return t('plantList.due', { time: timeDisplay });
+    if (daysSince >= freq) return `Due ${timeDisplay}`; // HARDCODED, NO TRANSLATION
     return timeDisplay;
   };
 
@@ -116,23 +116,22 @@ const PlantCard = ({ plant, onPress, t }) => {
 };
 
 export default function PlantListScreen({ navigation }) {
-  const { t } = useTranslation();
+  // const { t } = useTranslation(); // REMOVED
   const { plants = [], loading, loadPlants } = usePlants();
 
-  // THE FIX: Ensure loadPlants is never undefined in the dependency array
   useFocusEffect(
     React.useCallback(() => {
       if (loadPlants) {
         loadPlants();
       }
-    }, [loadPlants || (() => {})]) // <- This is the fix!
+    }, [loadPlants])
   );
 
   const renderPlantCard = ({ item }) => (
     <PlantCard 
       plant={item} 
       onPress={() => navigation.navigate('PlantDetail', { plant: item })}
-      t={t}
+      // t={t} // REMOVED
     />
   );
 
@@ -140,7 +139,7 @@ export default function PlantListScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text>{t('plantList.loading')}</Text>
+          <Text>Loading your plants...</Text> {/* HARDCODED */}
         </View>
       </SafeAreaView>
     );
@@ -149,9 +148,9 @@ export default function PlantListScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('plantList.title')}</Text>
+        <Text style={styles.headerTitle}>My Plant Family 🌱</Text> {/* HARDCODED */}
         <Text style={styles.headerSubtitle}>
-          {t('plantList.subtitle', { count: plants?.length })}
+          {plants?.length} plants • Tap to view details {/* HARDCODED */}
         </Text>
       </View>
       
@@ -165,7 +164,7 @@ export default function PlantListScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Ionicons name="leaf-outline" size={64} color="#d1d5db" />
             <Text style={styles.emptyText}>
-              {t('plantList.emptyTitle')}{'\n'}{t('plantList.emptyMessage')}
+              No plants yet!{'\n'}Add your first plant to get started {/* HARDCODED */}
             </Text>
           </View>
         }
