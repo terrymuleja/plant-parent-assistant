@@ -15,37 +15,19 @@ import { useTranslation } from 'react-i18next';
 import { usePlants } from '../hooks/usePlants';
 
 const PlantCard = ({ plant, onPress, t }) => {
-  // Safety check - if plant is null/undefined, don't render
   if (!plant) {
     console.warn('PlantCard received null/undefined plant');
     return null;
   }
 
-  // Safe translation wrapper - this is where the length error likely happens
-  const safeT = (key, options = {}) => {
-    try {
-      // Ensure all values are safe before passing to translation
-      const safeOptions = {};
-      Object.keys(options).forEach(k => {
-        const val = options[k];
-        safeOptions[k] = (val === null || val === undefined) ? '' : String(val);
-      });
-      return t(key, safeOptions);
-    } catch (error) {
-      console.error('Translation error in PlantCard:', key, error);
-      return key; // fallback to key
-    }
-  };
-
   const getTimeDisplay = (lastCareTime) => {
     try {
-      if (!lastCareTime) return safeT('plantList.never');
+      if (!lastCareTime) return t('plantList.never');
       
       const now = Date.now();
       const careTime = new Date(lastCareTime).getTime();
       
-      // Check for invalid dates
-      if (isNaN(careTime)) return safeT('plantList.never');
+      if (isNaN(careTime)) return t('plantList.never');
       
       const diffMs = now - careTime;
       
@@ -53,7 +35,7 @@ const PlantCard = ({ plant, onPress, t }) => {
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       
-      if (minutes < 1) return safeT('plantList.now');
+      if (minutes < 1) return t('plantList.now');
       if (minutes < 60) return `${minutes}m`;
       if (hours < 24) return `${hours}h`;
       if (days < 7) return `${days}d`;
@@ -80,8 +62,8 @@ const PlantCard = ({ plant, onPress, t }) => {
     try {
       const timeDisplay = getTimeDisplay(lastCareTime);
       
-      if (!timeDisplay || timeDisplay === safeT('plantList.never')) {
-        return safeT('plantList.never');
+      if (!timeDisplay || timeDisplay === t('plantList.never')) {
+        return t('plantList.never');
       }
       
       const daysSince = lastCareTime 
@@ -90,9 +72,12 @@ const PlantCard = ({ plant, onPress, t }) => {
       const freq = parseInt(frequency || (type === 'water' ? 7 : 30));
       
       if (daysSince >= freq) {
-        // This is likely where the crash happens - ensure timeDisplay is a string
-        const safeTimeDisplay = String(timeDisplay || '');
-        return safeT('plantList.due', { time: safeTimeDisplay });
+        // Keep the translation but ensure timeDisplay is never undefined/null
+        const safeTime = timeDisplay || '';
+        if (safeTime === '') {
+          return t('plantList.never');
+        }
+        return t('plantList.due', { time: safeTime });
       }
       return timeDisplay;
     } catch (error) {
@@ -106,9 +91,20 @@ const PlantCard = ({ plant, onPress, t }) => {
   const waterText = getCompactStatus(plant.lastWatered, 'water', plant.wateringFrequency);
   const fertText = getCompactStatus(plant.lastFertilized, 'fertiliz', plant.fertilizingFrequency);
 
-  // Safely handle photos array - this is where the "length" crash happens
-  const safePhotos = (plant.photos && Array.isArray(plant.photos)) ? plant.photos : [];
-  const latestPhoto = safePhotos.length > 0 ? safePhotos[safePhotos.length - 1] : null;
+  // Fix the photos.length issue - this might be where the crash happens
+  const safePhotos = plant.photos || [];
+  let latestPhoto = null;
+  let photoCount = 0;
+  
+  // Avoid .length completely - use for...of loop instead
+  if (Array.isArray(safePhotos)) {
+    for (const photo of safePhotos) {
+      if (photo) {
+        photoCount++;
+        latestPhoto = photo; // This will be the last valid photo
+      }
+    }
+  }
 
   return (
     <TouchableOpacity style={styles.plantCard} onPress={onPress}>
@@ -141,9 +137,9 @@ const PlantCard = ({ plant, onPress, t }) => {
             </View>
           </View>
           
-          {safePhotos.length > 0 && (
+          {photoCount > 0 && (
             <View style={styles.photoIndicator}>
-              <Text style={styles.photoText}>📸 {safePhotos.length}</Text>
+              <Text style={styles.photoText}>📸 {photoCount}</Text>
             </View>
           )}
         </View>
@@ -158,35 +154,24 @@ export default function PlantListScreen({ navigation }) {
   const { t } = useTranslation();
   const { plants, loading, loadPlants } = usePlants();
 
-  // Safe translation wrapper to catch length errors
-  const safeT = (key, options = {}) => {
-    try {
-      // Ensure all values are safe before passing to translation
-      const safeOptions = {};
-      Object.keys(options).forEach(k => {
-        const val = options[k];
-        safeOptions[k] = (val === null || val === undefined) ? 0 : val;
-      });
-      return t(key, safeOptions);
-    } catch (error) {
-      console.error('Translation error:', key, error);
-      return key; // fallback to key
-    }
-  };
-
-  // Debug logging to identify the issue
   console.log('PlantListScreen render - plants:', plants);
   console.log('PlantListScreen render - typeof plants:', typeof plants);
   console.log('PlantListScreen render - Array.isArray(plants):', Array.isArray(plants));
-  console.log('PlantListScreen render - loading:', loading);
 
-  // Safety check - ensure plants is always an array
   const safePlants = Array.isArray(plants) ? plants : [];
+  
+  // Avoid .length - count manually
+  let plantCount = 0;
+  for (const plant of safePlants) {
+    if (plant) plantCount++;
+  }
 
   useFocusEffect(
     React.useCallback(() => {
       console.log('PlantListScreen - useFocusEffect triggered, calling loadPlants');
-      loadPlants();
+      if (loadPlants) {
+        loadPlants();
+      }
     }, [loadPlants])
   );
 
@@ -216,7 +201,7 @@ export default function PlantListScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('plantList.title')}</Text>
         <Text style={styles.headerSubtitle}>
-          {t('plantList.subtitle', { count: safePlants.length || 0 })}
+          {t('plantList.subtitle', { count: plantCount })}
         </Text>
       </View>
       
@@ -224,7 +209,6 @@ export default function PlantListScreen({ navigation }) {
         data={safePlants}
         renderItem={renderPlantCard}
         keyExtractor={(item, index) => {
-          // Handle cases where item might not have id
           if (item && item.id) {
             return item.id;
           }
@@ -237,7 +221,7 @@ export default function PlantListScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Ionicons name="leaf-outline" size={64} color="#d1d5db" />
             <Text style={styles.emptyText}>
-              {safeT('plantList.emptyTitle')}{'\n'}{safeT('plantList.emptyMessage')}
+              {t('plantList.emptyTitle')}{'\n'}{t('plantList.emptyMessage')}
             </Text>
           </View>
         }
