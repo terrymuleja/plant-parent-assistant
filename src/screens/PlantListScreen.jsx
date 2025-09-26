@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-// import { useTranslation } from 'react-i18next'; // REMOVED
+import { useTranslation } from 'react-i18next'; // REMOVED
 import { usePlants } from '../hooks/usePlants';
 
 const PlantCard = ({ plant, onPress }) => { // REMOVED t parameter
