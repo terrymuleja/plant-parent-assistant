@@ -184,7 +184,7 @@ export default function PlantListScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('plantList.title')}</Text>
         <Text style={styles.headerSubtitle}>
-          {t('plantList.subtitle', { count: safePlants.length })}
+          {t('plantList.subtitle', { count: safePlants.length || 0 })}
         </Text>
       </View>
       
