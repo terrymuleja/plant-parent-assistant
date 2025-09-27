@@ -16,6 +16,26 @@ import PhotoTimelineScreen from './src/screens/PhotoTimelineScreen';
 import RemindersScreen from './src/screens/RemindersScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { PremiumProvider } from './src/hooks/usePremium';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://7e2217009f58c1a67ba470b5606c887d@o4510087143948288.ingest.de.sentry.io/4510087168065616',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -94,7 +114,7 @@ function MainTabs() {
   );
 }
 
-export default function App() {
+export default Sentry.wrap(function App() {
   // ADD i18n INITIALIZATION STATE
   const [isI18nInitialized, setIsI18nInitialized] = useState(false);
 
@@ -150,4 +170,4 @@ export default function App() {
       </NavigationContainer>
     </PremiumProvider>
   );
-}
+});

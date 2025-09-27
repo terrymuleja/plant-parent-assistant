@@ -40,7 +40,15 @@ export default {
           photosPermission: "The app accesses your photos to let you add plant pictures."
         }
       ],
-      [ "expo-localization"]
+      [ "expo-localization"],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "plantparent",
+          "organization": "trakiro"
+        }
+      ]
     ],
     extra: {
       eas: {

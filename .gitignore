@@ -175,3 +175,4 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 android/
+.env.local
